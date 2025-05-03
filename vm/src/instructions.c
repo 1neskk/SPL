@@ -21,7 +21,8 @@ void execute_instruction(VM* vm, Instruction instr)
         
         case OP_ADD:
             asm volatile(
-                "add %[result], %[val1], %[val2]"
+                "add %[val1], %[val2]\n\t"
+                "mov %[result], %[val1]"
                 : [result] "=r" (result)
                 : [val1] "r" (val1), [val2] "r" (val2)
             );
@@ -31,7 +32,8 @@ void execute_instruction(VM* vm, Instruction instr)
 
         case OP_SUB:
             asm volatile(
-                "sub %[result], %[val1], %[val2]"
+                "sub %[val1], %[val2]\n\t"
+                "mov %[result], %[val1]"
                 : [result] "=r" (result)
                 : [val1] "r" (val1), [val2] "r" (val2)
             );
@@ -41,7 +43,8 @@ void execute_instruction(VM* vm, Instruction instr)
 
         case OP_MUL:
             asm volatile(
-                "mul %[result], %[val1], %[val2]"
+                "imul %[val1], %[val2]\n\t"
+                "mov %[result], %[val1]"
                 : [result] "=r" (result)
                 : [val1] "r" (val1), [val2] "r" (val2)
             );
@@ -50,15 +53,19 @@ void execute_instruction(VM* vm, Instruction instr)
             break;
 
         case OP_DIV:
-            if (val2 == 0 || val1 == 0)
+            if (val2 == 0)
             {
                 fprintf(stderr, "Error: Division by zero\n");
                 exit(1);
             }
             asm volatile(
-                "div %[result], %[val1], %[val2]"
+                "mov %[val1], %%rax\n\t"
+                "xor %%rdx, %%rdx\n\t"
+                "div %[val2]\n\t"
+                "mov %[result], %%rax"
                 : [result] "=r" (result)
                 : [val1] "r" (val1), [val2] "r" (val2)
+                : "cc", "rax", "rdx"
             );
             set_operand_value(vm, instr.operands[0], result);
             vm->cpu.pc++;
