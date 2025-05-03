@@ -21,8 +21,8 @@ void execute_instruction(VM* vm, Instruction instr)
         
         case OP_ADD:
             asm volatile(
-                "add %[val1], %[val2]\n\t"
-                "mov %[result], %[val1]"
+                "add %[val2], %[val1]\n\t"
+                "mov %[val1], %[result]"
                 : [result] "=r" (result)
                 : [val1] "r" (val1), [val2] "r" (val2)
             );
@@ -32,8 +32,8 @@ void execute_instruction(VM* vm, Instruction instr)
 
         case OP_SUB:
             asm volatile(
-                "sub %[val1], %[val2]\n\t"
-                "mov %[result], %[val1]"
+                "sub %[val2], %[val1]\n\t"
+                "mov %[val1], %[result]"
                 : [result] "=r" (result)
                 : [val1] "r" (val1), [val2] "r" (val2)
             );
@@ -43,8 +43,8 @@ void execute_instruction(VM* vm, Instruction instr)
 
         case OP_MUL:
             asm volatile(
-                "imul %[val1], %[val2]\n\t"
-                "mov %[result], %[val1]"
+                "imul %[val2], %[val1]\n\t"
+                "mov %[val1], %[result]"
                 : [result] "=r" (result)
                 : [val1] "r" (val1), [val2] "r" (val2)
             );
@@ -62,10 +62,10 @@ void execute_instruction(VM* vm, Instruction instr)
                 "mov %[val1], %%rax\n\t"
                 "xor %%rdx, %%rdx\n\t"
                 "div %[val2]\n\t"
-                "mov %[result], %%rax"
+                "mov %%rax, %[result]"
                 : [result] "=r" (result)
                 : [val1] "r" (val1), [val2] "r" (val2)
-                : "cc", "rax", "rdx"
+                : "rax", "rdx"
             );
             set_operand_value(vm, instr.operands[0], result);
             vm->cpu.pc++;
