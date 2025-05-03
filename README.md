@@ -36,7 +36,7 @@ flowchart TB
         Lexer[Lexical Analyzer]
         Parser[Syntax Parser]
         SemanticAnalyzer[Semantic Analyzer]
-        CodeGen[Assembly Code Generator]
+        CodeGen[Bytecode Generator]
     end
     
     subgraph "Virtual Machine (C/Assembly)"
@@ -53,8 +53,8 @@ flowchart TB
     Lexer -->|Token Stream| Parser
     Parser -->|AST| SemanticAnalyzer
     SemanticAnalyzer -->|Annotated AST| CodeGen
-    CodeGen -->|Virtual Assembly| Assembler
-    CodeGen -->|Virtual Assembly| ASMViewer
+    CodeGen -->|Bytecode| Assembler
+    CodeGen -->|Bytecode| ASMViewer
     Assembler -->|Binary Format| Core
     Core <--> Memory
     Core <--> Registers
