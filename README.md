@@ -64,8 +64,8 @@ flowchart TB
     Core -->|VM State| VMVisualizer
     IO -->|Program Output| Output
     
-    classDef nextjs fill:#61DAFB,stroke:#333,stroke-width:2px;
-    classDef compiler fill:#F9C80E,stroke:#333,stroke-width:2px;
+    classDef nextjs fill:#0099ff,stroke:#333,stroke-width:2px;
+    classDef compiler fill:#009933,stroke:#333,stroke-width:2px;
     classDef vm fill:#EA3546,stroke:#333,stroke-width:2px;
     
     class Editor,ASMViewer,VMVisualizer,Output nextjs;
