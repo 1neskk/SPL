@@ -100,8 +100,8 @@ flowchart LR
         CodeGen[Code Generator] -->|Bytecode| Assembly[Bytecode]
     end
     
-    classDef phase fill:#f9f,stroke:#333,stroke-width:2px;
-    classDef data fill:#bbf,stroke:#333,stroke-width:1px;
+    classDef phase fill:#cc00cc,stroke:#333,stroke-width:2px;
+    classDef data fill:#ff0000,stroke:#333,stroke-width:1px;
     
     class Lexer,Parser,Semantic,CodeGen phase;
     class Input,TokenStream,SyntaxTree,AnnotatedAST,Assembly data;
