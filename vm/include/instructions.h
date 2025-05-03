@@ -1,6 +1,10 @@
 #ifndef INSTRUCTIONS_H
 #define INSTRUCTIONS_H
 
+#define FLAG_EQUAL 0
+#define FLAG_GREATER 1
+#define FLAG_LESS -1
+
 typedef enum
 {
     OP_HALT,

@@ -19,7 +19,6 @@ void execute_instruction(VM* vm, Instruction instr)
             vm->cpu.pc++;
             break;
         
-        // ADD R1, R2 where the value of R1 + R2 is stored in R1
         case OP_ADD:
             asm volatile(
                 "add %[result], %[val1], %[val2]"
@@ -31,29 +30,58 @@ void execute_instruction(VM* vm, Instruction instr)
             break;
 
         case OP_SUB:
-            result = val1 - val2;
+            asm volatile(
+                "sub %[result], %[val1], %[val2]"
+                : [result] "=r" (result)
+                : [val1] "r" (val1), [val2] "r" (val2)
+            );
             set_operand_value(vm, instr.operands[0], result);
             vm->cpu.pc++;
             break;
 
         case OP_MUL:
-            result = val1 * val2;
+            asm volatile(
+                "mul %[result], %[val1], %[val2]"
+                : [result] "=r" (result)
+                : [val1] "r" (val1), [val2] "r" (val2)
+            );
             set_operand_value(vm, instr.operands[0], result);
             vm->cpu.pc++;
             break;
 
         case OP_DIV:
-            if (val2 == 0)
+            if (val2 == 0 || val1 == 0)
             {
                 fprintf(stderr, "Error: Division by zero\n");
                 exit(1);
             }
-            result = val1 / val2;
+            asm volatile(
+                "div %[result], %[val1], %[val2]"
+                : [result] "=r" (result)
+                : [val1] "r" (val1), [val2] "r" (val2)
+            );
             set_operand_value(vm, instr.operands[0], result);
             vm->cpu.pc++;
             break;
-    }
 
+        case OP_CMP:
+            asm volatile(
+                "cmp %[val1], %[val2]\n\t"
+                "mov %[equal], %%rax\n\t"
+                "mov %[greater], %%rbx\n\t"
+                "mov %[less], %%rcx\n\t"
+                "cmove %%rax, %[flags]\n\t"
+                "cmovg %%rbx, %[flags]\n\t"
+                "cmovl %%rcx, %[flags]"
+                : [flags] "=r" (vm->cpu.flags)
+                : [val1] "r" (val1), [val2] "r" (val2),
+                  [equal] "i" (FLAG_EQUAL), [greater] "i" (FLAG_GREATER),
+                  [less] "i" (FLAG_LESS)
+                : "cc", "rax", "rbx", "rcx"
+            );
+            vm->cpu.pc++;
+            break;
+    }
 }
 
 int get_operand_value(VM* vm, Operand operand)
