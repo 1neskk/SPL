@@ -20,12 +20,16 @@ void execute_instruction(VM* vm, Instruction instr)
             break;
         
         case OP_ADD:
+#if defined(__x86_64__) || defined(_M_X64)
             asm volatile(
                 "add %[val2], %[val1]\n\t"
                 "mov %[val1], %[result]"
                 : [result] "=r" (result)
                 : [val1] "r" (val1), [val2] "r" (val2)
             );
+#else
+            result = val1 + val2;
+#endif
             set_operand_value(vm, instr.operands[0], result);
             vm->cpu.pc++;
             break;
@@ -87,6 +91,10 @@ void execute_instruction(VM* vm, Instruction instr)
                 : "cc", "rax", "rbx", "rcx"
             );
             vm->cpu.pc++;
+            break;
+
+        case OP_JMP:
+            vm->cpu.pc = find_label_address(vm, instr.operands[0].value.label);
             break;
     }
 }
