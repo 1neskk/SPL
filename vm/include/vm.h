@@ -2,6 +2,7 @@
 #define VM_H
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "instructions.h"
 
 #define NUM_REGISTERS 8
