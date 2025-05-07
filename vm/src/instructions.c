@@ -122,15 +122,7 @@ void execute_instruction(VM* vm, Instruction instr)
             break;
 
         case OP_JMP:
-#ifdef USE_ASM
-            asm volatile(
-                "jmp *%[addr]"
-                :
-                : [addr] "r" (find_label_address(vm, instr.operands[0].value.label))
-            );
-#else
             vm->cpu.pc = find_label_address(vm, instr.operands[0].value.label);
-#endif
             break;
     }
 }
