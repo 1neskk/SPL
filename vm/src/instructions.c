@@ -124,6 +124,67 @@ void execute_instruction(VM* vm, Instruction instr)
         case OP_JMP:
             vm->cpu.pc = find_label_address(vm, instr.operands[0].value.label);
             break;
+
+        case OP_JZ:
+            if (vm->cpu.flags == FLAG_EQUAL)
+                vm->cpu.pc = find_label_address(vm, instr.operands[0].value.label);
+            else
+                vm->cpu.pc++;
+            break;
+
+        case OP_JNZ:
+            if (vm->cpu.flags != FLAG_EQUAL)
+                vm->cpu.pc = find_label_address(vm, instr.operands[0].value.label);
+            else
+                vm->cpu.pc++;
+            break;
+
+        case OP_JG:
+            if (vm->cpu.flags == FLAG_GREATER)
+                vm->cpu.pc = find_label_address(vm, instr.operands[0].value.label);
+            else
+                vm->cpu.pc++;
+            break;
+
+        case OP_JL:
+            if (vm->cpu.flags == FLAG_LESS)
+                vm->cpu.pc = find_label_address(vm, instr.operands[0].value.label);
+            else
+                vm->cpu.pc++;
+            break;
+
+        case OP_JGE:
+            if (vm->cpu.flags == FLAG_GREATER || vm->cpu.flags == FLAG_EQUAL)
+                vm->cpu.pc = find_label_address(vm, instr.operands[0].value.label);
+            else
+                vm->cpu.pc++;
+            break;
+
+        case OP_JLE:
+            if (vm->cpu.flags == FLAG_LESS || vm->cpu.flags == FLAG_EQUAL)
+                vm->cpu.pc = find_label_address(vm, instr.operands[0].value.label);
+            else
+                vm->cpu.pc++;
+            break;
+
+        case OP_LEA:
+            int addr = 0;
+
+            if (instr.operands[1].type == OPERAND_MEMORY)
+                addr = instr.operands[1].value.mem;
+            else if (instr.operands[1].type == OPERAND_IMMEDIATE)
+                addr = instr.operands[1].value.imm;
+            else if (instr.operands[1].type == OPERAND_REGISTER)
+                addr = vm->cpu.registers[instr.operands[1].value.reg];
+            else
+            {
+                fprintf(stderr, "Error: Invalid operand type for LEA\n");
+                exit(1);
+            }
+
+            set_operand_value(vm, instr.operands[0], addr);
+            vm->cpu.pc++;
+            break;
     }
 }
 
