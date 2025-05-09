@@ -1,4 +1,5 @@
-.PHONY: build
+.PHONY: build debug clean format
+
 build:
 	mkdir -p build
 	echo "Building project in Release mode..."
@@ -6,7 +7,6 @@ build:
 	cmake -DCMAKE_BUILD_TYPE=release .. && \
 	make
 
-.PHONY: debug
 debug:
 	mkdir -p build
 	echo "Building project in Debug mode..."
@@ -14,10 +14,8 @@ debug:
 	cmake .. -DCMAKE_BUILD_TYPE=Debug && \
 	make
 
-.PHONY: clean
 clean:
 	rm -rf build
 
-.PHONY: format
 format:
-	clang-format src/* src/* -i
+	clang-format vm/src/*.c vm/include/*.h compiler/src/*.c compiler/include/*.h -i --style=file

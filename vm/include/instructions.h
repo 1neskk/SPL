@@ -22,7 +22,8 @@ typedef enum
     OP_JGE,
     OP_JLE,
     OP_LEA,
-    OP_STORE,
+    OP_PUSH,
+    OP_POP,
     OP_PRINT,
 } OpCode;
 
@@ -50,6 +51,7 @@ typedef struct
 {
     OpCode opcode;
     Operand operands[2];
+    int num_operands;
 } Instruction;
 
 

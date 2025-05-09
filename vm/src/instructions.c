@@ -9,7 +9,7 @@ void execute_instruction(VM* vm, Instruction instr)
     int val1, val2, result;
 
     val1 = get_operand_value(vm, instr.operands[0]);
-    if (instr.opcode != OP_JMP && instr.opcode != OP_STORE)
+    if (instr.num_operands > 1)
         val2 = get_operand_value(vm, instr.operands[1]);
 
     switch (instr.opcode)
@@ -184,6 +184,15 @@ void execute_instruction(VM* vm, Instruction instr)
 
             set_operand_value(vm, instr.operands[0], addr);
             vm->cpu.pc++;
+            break;
+
+        case OP_PUSH:
+            if (vm->cpu.pc < 0)
+            {
+                fprintf(stderr, "Error: Cannot push to stack when program is halted\n");
+                exit(1);
+            }
+            vm->memory.data[--vm->cpu.pc] = val1;
             break;
     }
 }
