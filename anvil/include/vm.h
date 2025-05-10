@@ -3,21 +3,45 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include "instructions.h"
 
-#define NUM_REGISTERS 8
-#define MEMORY_SIZE 65536 // 64KB
+#define MEMORY_SIZE (1 << 16) // 64KB
+
+typedef enum
+{
+    R_AX = 0,
+    R_BX,
+    R_CX,
+    R_DX,
+    R_SP,
+    R_BP,
+    R_SI,
+    R_DI,
+    R_IP,
+    R_FLAGS,
+    R_COUNT
+} Register;
+
+typedef enum
+{
+    FL_ZF = 1 << 0, // Zero Flag
+    FL_SF = 1 << 1, // Sign Flag
+    FL_OF = 1 << 2, // Overflow Flag
+    FL_CF = 1 << 3, // Carry Flag 
+} Flag;
 
 typedef struct
 {
-    int registers[NUM_REGISTERS];
-    int pc; // program counter
-    int flags;
+    uint16_t registers[R_COUNT];
+    uint16_t flags;
+    int ip; // Instruction Pointer
+    int sp; // Stack Pointer
 } CPU;
 
 typedef struct
 {
-    int data[MEMORY_SIZE];
+    uint16_t data[MEMORY_SIZE];
 } Memory;
 
 typedef struct

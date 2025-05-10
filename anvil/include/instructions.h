@@ -1,10 +1,6 @@
 #ifndef INSTRUCTIONS_H
 #define INSTRUCTIONS_H
 
-#define FLAG_EQUAL 0
-#define FLAG_GREATER 1
-#define FLAG_LESS -1
-
 typedef enum
 {
     OP_HALT,
@@ -13,6 +9,9 @@ typedef enum
     OP_SUB,
     OP_MUL,
     OP_DIV,
+    OP_INC,
+    OP_DEC,
+    OP_XOR,
     OP_CMP,
     OP_JMP,
     OP_JZ,
@@ -24,7 +23,8 @@ typedef enum
     OP_LEA,
     OP_PUSH,
     OP_POP,
-    OP_PRINT,
+    OP_CALL,
+    OP_RET,
 } OpCode;
 
 typedef enum

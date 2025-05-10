@@ -15,12 +15,12 @@ void execute_instruction(VM* vm, Instruction instr)
     switch (instr.opcode)
     {
         case OP_HALT:
-            vm->cpu.pc = -1; // Stop execution
+            vm->cpu.ip = -1; // Stop execution
             break;
 
         case OP_MOV:
             set_operand_value(vm, instr.operands[0], val2);
-            vm->cpu.pc++;
+            vm->cpu.ip++;
             break;
         
         case OP_ADD:
@@ -35,7 +35,7 @@ void execute_instruction(VM* vm, Instruction instr)
             result = val1 + val2;
 #endif
             set_operand_value(vm, instr.operands[0], result);
-            vm->cpu.pc++;
+            vm->cpu.ip++;
             break;
 
         case OP_SUB:
@@ -50,7 +50,7 @@ void execute_instruction(VM* vm, Instruction instr)
             result = val1 - val2;
 #endif
             set_operand_value(vm, instr.operands[0], result);
-            vm->cpu.pc++;
+            vm->cpu.ip++;
             break;
 
         case OP_MUL:
@@ -65,7 +65,7 @@ void execute_instruction(VM* vm, Instruction instr)
             result = val1 * val2;
 #endif
             set_operand_value(vm, instr.operands[0], result);
-            vm->cpu.pc++;
+            vm->cpu.ip++;
             break;
 
         case OP_DIV:
@@ -90,81 +90,145 @@ void execute_instruction(VM* vm, Instruction instr)
             result = val1 / val2;
 #endif
             set_operand_value(vm, instr.operands[0], result);
-            vm->cpu.pc++;
+            vm->cpu.ip++;
+            break;
+
+        case OP_INC:
+#ifdef USE_ASM
+            asm volatile(
+                "inc %[val]\n\t"
+                "mov %[val], %[result]"
+                : [result] "=r" (result)
+                : [val] "r" (val1)
+            );
+#else
+            result = val1 + 1;
+#endif
+            set_operand_value(vm, instr.operands[0], result);
+            vm->cpu.ip++;
+            break;
+
+        case OP_DEC:
+#ifdef USE_ASM
+            asm volatile(
+                "dec %[val]\n\t"
+                "mov %[val], %[result]"
+                : [result] "=r" (result)
+                : [val] "r" (val1)
+            );
+
+#else
+            result = val1 - 1;
+#endif
+            set_operand_value(vm, instr.operands[0], result);
+            vm->cpu.ip++;
+            break;
+
+        case OP_XOR:
+#ifdef USE_ASM
+            asm volatile(
+                "xor %[val2], %[val1]\n\t"
+                "mov %[val1], %[result]"
+                : [result] "=r" (result)
+                : [val1] "r" (val1), [val2] "r" (val2)
+            );
+#else
+            result = val1 ^ val2;
+#endif
+            set_operand_value(vm, instr.operands[0], result);
+            vm->cpu.ip++;
             break;
 
         case OP_CMP:
 #ifdef USE_ASM
             asm volatile(
-                "cmp %[val2], %[val1]\n\t"      // Compare val1 and val2
-                "mov %[equal], %%eax\n\t"       // Setup flag values
-                "mov %[greater], %%ebx\n\t"
-                "mov %[less], %%ecx\n\t"
-                "mov %%eax, %%edx\n\t"          // Store equal flag in result register
-                "cmovg %%ebx, %%edx\n\t"        // If greater, set result to greater flag
-                "cmovl %%ecx, %%edx\n\t"        // If less, set result to less flag
-                "mov %%edx, %[result]"          // Store result in flags
+                "xor %%edx, %%edx\n\t"
+                "cmp %[val2], %[val1]\n\t"
+                "jne 1f\n\t"
+                "or %[zf], %%edx\n\t"
+                "1:\n\t"
+                "jge 2f\n\t"
+                "or %[sf], %%edx\n\t"
+                "2:\n\t"
+                "jnc 3f\n\t"
+                "or %[cf], %%edx\n\t"
+                "3:\n\t"
+                "jno 4f\n\t"
+                "or %[of], %%edx\n\t"
+                "4:\n\t"
+                "mov %%edx, %[result]"
                 : [result] "=r" (vm->cpu.flags)
                 : [val1] "r" (val1), [val2] "r" (val2),
-                  [equal] "i" (FLAG_EQUAL), [greater] "i" (FLAG_GREATER),
-                  [less] "i" (FLAG_LESS)
-                : "cc", "eax", "ebx", "ecx", "edx"
+                  [zf] "i" (FL_ZF), [sf] "i" (FL_SF),
+                  [cf] "i" (FL_CF), [of] "i" (FL_OF)
+                : "cc", "edx"
             );
 #else
-            if (val1 == val2)
-                vm->cpu.flags = FLAG_EQUAL;
-            else if (val1 > val2)
-                vm->cpu.flags = FLAG_GREATER;
-            else
-                vm->cpu.flags = FLAG_LESS;
+            vm->cpu.flags = 0;
+            result = val1 - val2;
+            if (result == 0)
+                vm->cpu.flags |= FL_ZF;
+
+            if (result < 0)
+                vm->cpu.flags |= FL_SF;
+
+            if ((unsigned int)val1 < (unsigned int)val2)
+                vm->cpu.flags |= FL_CF;
+
+            if (((val1 >= 0 && val2 < 0) || (val1 < 0 && val2 >= 0)) &&
+                ((val1 - val2 >= 0) != (val1 >= 0)))
+                vm->cpu.flags |= FL_OF;
+
 #endif
-            vm->cpu.pc++;
+            vm->cpu.ip++;
             break;
 
         case OP_JMP:
-            vm->cpu.pc = find_label_address(vm, instr.operands[0].value.label);
+            vm->cpu.ip = find_label_address(vm, instr.operands[0].value.label);
             break;
 
         case OP_JZ:
-            if (vm->cpu.flags == FLAG_EQUAL)
-                vm->cpu.pc = find_label_address(vm, instr.operands[0].value.label);
+            if (vm->cpu.flags & FL_ZF)
+                vm->cpu.ip = find_label_address(vm, instr.operands[0].value.label);
             else
-                vm->cpu.pc++;
+                vm->cpu.ip++;
             break;
 
         case OP_JNZ:
-            if (vm->cpu.flags != FLAG_EQUAL)
-                vm->cpu.pc = find_label_address(vm, instr.operands[0].value.label);
+            if (!(vm->cpu.flags & FL_ZF))
+                vm->cpu.ip = find_label_address(vm, instr.operands[0].value.label);
             else
-                vm->cpu.pc++;
+                vm->cpu.ip++;
             break;
 
         case OP_JG:
-            if (vm->cpu.flags == FLAG_GREATER)
-                vm->cpu.pc = find_label_address(vm, instr.operands[0].value.label);
+            if (!(vm->cpu.flags & FL_ZF) &&
+                ((vm->cpu.flags & FL_SF) == 0) == ((vm->cpu.flags & FL_OF) == 0))
+                vm->cpu.ip = find_label_address(vm, instr.operands[0].value.label);
             else
-                vm->cpu.pc++;
+                vm->cpu.ip++;
             break;
 
         case OP_JL:
-            if (vm->cpu.flags == FLAG_LESS)
-                vm->cpu.pc = find_label_address(vm, instr.operands[0].value.label);
+            if (((vm->cpu.flags & FL_SF) == 0) != ((vm->cpu.flags & FL_OF) == 0))
+                vm->cpu.ip = find_label_address(vm, instr.operands[0].value.label);
             else
-                vm->cpu.pc++;
+                vm->cpu.ip++;
             break;
 
         case OP_JGE:
-            if (vm->cpu.flags == FLAG_GREATER || vm->cpu.flags == FLAG_EQUAL)
-                vm->cpu.pc = find_label_address(vm, instr.operands[0].value.label);
+            if (((vm->cpu.flags & FL_SF) == 0) == ((vm->cpu.flags & FL_OF) == 0))
+                vm->cpu.ip = find_label_address(vm, instr.operands[0].value.label);
             else
-                vm->cpu.pc++;
+                vm->cpu.ip++;
             break;
 
         case OP_JLE:
-            if (vm->cpu.flags == FLAG_LESS || vm->cpu.flags == FLAG_EQUAL)
-                vm->cpu.pc = find_label_address(vm, instr.operands[0].value.label);
+            if ((vm->cpu.flags & FL_ZF) ||
+                ((vm->cpu.flags & FL_SF) == 0) != ((vm->cpu.flags & FL_OF) == 0))
+                vm->cpu.ip = find_label_address(vm, instr.operands[0].value.label);
             else
-                vm->cpu.pc++;
+                vm->cpu.ip++;
             break;
 
         case OP_LEA:
@@ -183,17 +247,51 @@ void execute_instruction(VM* vm, Instruction instr)
             }
 
             set_operand_value(vm, instr.operands[0], addr);
-            vm->cpu.pc++;
+            vm->cpu.ip++;
             break;
 
         case OP_PUSH:
-            if (vm->cpu.pc < 0)
+            if (vm->cpu.sp >= MEMORY_SIZE)
             {
-                fprintf(stderr, "Error: Cannot push to stack when program is halted\n");
+                fprintf(stderr, "Error: Stack overflow\n");
                 exit(1);
             }
-            vm->memory.data[--vm->cpu.pc] = val1;
+            vm->memory.data[--vm->cpu.sp] = val1;
+            vm->cpu.ip++;
             break;
+
+        case OP_POP:
+            if (vm->cpu.sp >= MEMORY_SIZE)
+            {
+                fprintf(stderr, "Error: Stack underflow\n");
+                exit(1);
+            }
+            set_operand_value(vm, instr.operands[0], vm->memory.data[vm->cpu.sp++]);
+            vm->cpu.ip++;
+            break;
+
+        case OP_CALL:
+            if (vm->cpu.sp >= MEMORY_SIZE)
+            {
+                fprintf(stderr, "Error: Stack overflow\n");
+                exit(1);
+            }
+            vm->memory.data[--vm->cpu.sp] = vm->cpu.ip + 1;
+            vm->cpu.ip = find_label_address(vm, instr.operands[0].value.label);
+            break;
+
+        case OP_RET:
+            if (vm->cpu.sp >= MEMORY_SIZE)
+            {
+                fprintf(stderr, "Error: Stack underflow\n");
+                exit(1);
+            }
+            vm->cpu.ip = vm->memory.data[vm->cpu.sp++];
+            break;
+
+        default:
+            fprintf(stderr, "Error: Unknown opcode %d\n", instr.opcode);
+            exit(1);
     }
 }
 
