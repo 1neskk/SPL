@@ -251,9 +251,9 @@ void execute_instruction(VM* vm, Instruction instr)
             break;
 
         case OP_PUSH:
-            if (vm->cpu.sp >= MEMORY_SIZE)
+            if (vm->cpu.sp <= 0)
             {
-                fprintf(stderr, "Error: Stack overflow\n");
+                fprintf(stderr, "Error: Stack overflow at instruction %d\n", vm->cpu.ip);
                 exit(1);
             }
             vm->memory.data[--vm->cpu.sp] = val1;
@@ -261,32 +261,56 @@ void execute_instruction(VM* vm, Instruction instr)
             break;
 
         case OP_POP:
-            if (vm->cpu.sp >= MEMORY_SIZE)
+            if (vm->cpu.sp >= vm->cpu.registers[R_BP])
             {
-                fprintf(stderr, "Error: Stack underflow\n");
+                fprintf(stderr, "Error: Stack underflow at instruction %d\n", vm->cpu.ip);
                 exit(1);
             }
+
+            if (instr.operands[0].type != OPERAND_REGISTER && 
+                instr.operands[0].type != OPERAND_MEMORY)
+            {
+                fprintf(stderr, "Error: Invalid destination for POP\n");
+                exit(1);
+            }
+            
             set_operand_value(vm, instr.operands[0], vm->memory.data[vm->cpu.sp++]);
             vm->cpu.ip++;
             break;
 
         case OP_CALL:
-            if (vm->cpu.sp >= MEMORY_SIZE)
+            if (vm->cpu.sp <= 0)
             {
-                fprintf(stderr, "Error: Stack overflow\n");
+                fprintf(stderr, "Error: Stack overflow on CALL instruction at %d\n", vm->cpu.ip);
                 exit(1);
             }
+
+            int target_addr = find_label_address(vm, instr.operands[0].value.label);
+            if (target_addr < 0 || target_addr >= vm->program_size)
+            {
+                fprintf(stderr, "Error: Invalid CALL target address %d\n", target_addr);
+                exit(1);
+            }
+
             vm->memory.data[--vm->cpu.sp] = vm->cpu.ip + 1;
-            vm->cpu.ip = find_label_address(vm, instr.operands[0].value.label);
+            vm->cpu.ip = target_addr;
             break;
 
         case OP_RET:
-            if (vm->cpu.sp >= MEMORY_SIZE)
+            if (vm->cpu.sp >= vm->cpu.registers[R_BP])
             {
-                fprintf(stderr, "Error: Stack underflow\n");
+                fprintf(stderr, "Error: Stack underflow on RET instruction at %d\n", vm->cpu.ip);
                 exit(1);
             }
-            vm->cpu.ip = vm->memory.data[vm->cpu.sp++];
+
+            int return_addr = vm->memory.data[vm->cpu.sp++];
+            if (return_addr < 0 || return_addr >= vm->program_size)
+            {
+                fprintf(stderr, "Error: Invalid return address %d\n", return_addr);
+                exit(1);
+            }
+
+            vm->cpu.ip = return_addr;
             break;
 
         default:
