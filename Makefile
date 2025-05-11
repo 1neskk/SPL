@@ -18,4 +18,4 @@ clean:
 	rm -rf build
 
 format:
-	clang-format vm/src/*.c vm/include/*.h compiler/src/*.c compiler/include/*.h -i --style=file
+	clang-format anvil/src/*.c anvil/include/*.h axiom/src/*.c axiom/include/*.h -i --style=file

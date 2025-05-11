@@ -33,15 +33,15 @@ typedef enum
 
 typedef struct
 {
-    uint16_t registers[R_COUNT];
-    uint16_t flags;
+    int registers[R_COUNT];
+    uint32_t flags;
     int ip; // Instruction Pointer
     int sp; // Stack Pointer
 } CPU;
 
 typedef struct
 {
-    uint16_t data[MEMORY_SIZE];
+    uint32_t data[MEMORY_SIZE];
 } Memory;
 
 typedef struct

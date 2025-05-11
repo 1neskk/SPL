@@ -7,6 +7,7 @@
 void execute_instruction(VM* vm, Instruction instr)
 {
     int val1, val2, result;
+    int addr, target_addr, return_addr;
 
     val1 = get_operand_value(vm, instr.operands[0]);
     if (instr.num_operands > 1)
@@ -142,26 +143,26 @@ void execute_instruction(VM* vm, Instruction instr)
         case OP_CMP:
 #ifdef USE_ASM
             asm volatile(
-                "xor %%edx, %%edx\n\t"
+                "xor %%eax, %%eax\n\t"
                 "cmp %[val2], %[val1]\n\t"
                 "jne 1f\n\t"
-                "or %[zf], %%edx\n\t"
+                "or %[zf], %%eax\n\t"
                 "1:\n\t"
                 "jge 2f\n\t"
-                "or %[sf], %%edx\n\t"
+                "or %[sf], %%eax\n\t"
                 "2:\n\t"
                 "jnc 3f\n\t"
-                "or %[cf], %%edx\n\t"
+                "or %[cf], %%eax\n\t"
                 "3:\n\t"
                 "jno 4f\n\t"
-                "or %[of], %%edx\n\t"
+                "or %[of], %%eax\n\t"
                 "4:\n\t"
-                "mov %%edx, %[result]"
+                "mov %%eax, %[result]"
                 : [result] "=r" (vm->cpu.flags)
                 : [val1] "r" (val1), [val2] "r" (val2),
                   [zf] "i" (FL_ZF), [sf] "i" (FL_SF),
                   [cf] "i" (FL_CF), [of] "i" (FL_OF)
-                : "cc", "edx"
+                : "cc", "eax"
             );
 #else
             vm->cpu.flags = 0;
@@ -232,7 +233,7 @@ void execute_instruction(VM* vm, Instruction instr)
             break;
 
         case OP_LEA:
-            int addr = 0;
+            addr = 0;
 
             if (instr.operands[1].type == OPERAND_MEMORY)
                 addr = instr.operands[1].value.mem;
@@ -285,7 +286,7 @@ void execute_instruction(VM* vm, Instruction instr)
                 exit(1);
             }
 
-            int target_addr = find_label_address(vm, instr.operands[0].value.label);
+            target_addr = find_label_address(vm, instr.operands[0].value.label);
             if (target_addr < 0 || target_addr >= vm->program_size)
             {
                 fprintf(stderr, "Error: Invalid CALL target address %d\n", target_addr);
@@ -303,7 +304,7 @@ void execute_instruction(VM* vm, Instruction instr)
                 exit(1);
             }
 
-            int return_addr = vm->memory.data[vm->cpu.sp++];
+            return_addr = vm->memory.data[vm->cpu.sp++];
             if (return_addr < 0 || return_addr >= vm->program_size)
             {
                 fprintf(stderr, "Error: Invalid return address %d\n", return_addr);
