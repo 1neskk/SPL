@@ -7,6 +7,8 @@
 #include "instructions.h"
 
 #define MEMORY_SIZE (1 << 16) // 64KB
+#define STACK_START (MEMORY_SIZE - 1)
+#define STACK_SIZE 4096
 
 typedef enum
 {

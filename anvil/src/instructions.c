@@ -252,7 +252,7 @@ void execute_instruction(VM* vm, Instruction instr)
             break;
 
         case OP_PUSH:
-            if (vm->cpu.sp <= 0)
+            if (vm->cpu.sp <= (STACK_START - STACK_SIZE))
             {
                 fprintf(stderr, "Error: Stack overflow at instruction %d\n", vm->cpu.ip);
                 exit(1);
@@ -280,7 +280,7 @@ void execute_instruction(VM* vm, Instruction instr)
             break;
 
         case OP_CALL:
-            if (vm->cpu.sp <= 0)
+            if (vm->cpu.sp <= (STACK_START - STACK_SIZE))
             {
                 fprintf(stderr, "Error: Stack overflow on CALL instruction at %d\n", vm->cpu.ip);
                 exit(1);
