@@ -54,5 +54,9 @@ typedef struct
     int num_operands;
 } Instruction;
 
+inline bool has_signed_overflow(int a, int b, int result)
+{
+    return ((a >= 0 && b < 0 && result < 0) || (a < 0 && b >= 0 && result >= 0));
+}
 
 #endif // INSTRUCTIONS_H

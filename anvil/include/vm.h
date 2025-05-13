@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include "instructions.h"
 
 #define MEMORY_SIZE (1 << 16) // 64KB
@@ -57,10 +58,17 @@ typedef struct
     int num_labels;
 } VM;
 
+inline bool is_greater(VM* vm)
+{
+    return !(vm->cpu.flags & FL_ZF) && 
+        ((vm->cpu.flags & FL_SF) == 0) == ((vm->cpu.flags & FL_OF) == 0);
+}
+
 void execute_instruction(VM* vm, Instruction instr);
 
 int get_operand_value(VM* vm, Operand operand);
 void set_operand_value(VM* vm, Operand operand, int value);
+
 int find_label_address(VM* vm, int label_index);
 
 #endif // VM_H
