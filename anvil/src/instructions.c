@@ -36,6 +36,7 @@ VMError execute_instruction(VM* vm, Instruction instr)
             result = val1 + val2;
 #endif
             set_operand_value(vm, instr.operands[0], result);
+            update_flags(vm, result, val1, val2, OP_ADD);
             vm->cpu.ip++;
             break;
 
@@ -51,6 +52,7 @@ VMError execute_instruction(VM* vm, Instruction instr)
             result = val1 - val2;
 #endif
             set_operand_value(vm, instr.operands[0], result);
+            update_flags(vm, result, val1, val2, OP_SUB);
             vm->cpu.ip++;
             break;
 
@@ -66,6 +68,7 @@ VMError execute_instruction(VM* vm, Instruction instr)
             result = val1 * val2;
 #endif
             set_operand_value(vm, instr.operands[0], result);
+            update_flags(vm, result, val1, val2, OP_MUL);
             vm->cpu.ip++;
             break;
 
@@ -91,6 +94,7 @@ VMError execute_instruction(VM* vm, Instruction instr)
             result = val1 / val2;
 #endif
             set_operand_value(vm, instr.operands[0], result);
+            update_flags(vm, result, val1, val2, OP_DIV);
             vm->cpu.ip++;
             break;
 
@@ -362,4 +366,23 @@ int find_label_address(VM* vm, int label_index)
         return 0;
     }
     return vm->label_addresses[label_index];
+}
+
+VMError update_flags(VM* vm, int result, int operand1, int operand2, OpCode operation)
+{
+    vm->cpu.flags = 0;
+
+    if (result == 0)
+        vm->cpu.flags |= FL_ZF;
+
+    if (result < 0)
+        vm->cpu.flags |= FL_SF;
+
+    if ((unsigned int)operand1 < (unsigned int)operand2)
+        vm->cpu.flags |= FL_CF;
+
+    if (has_signed_overflow(operand1, -operand2, result))
+        vm->cpu.flags |= FL_OF;
+
+    return VM_SUCCESS;
 }
