@@ -13,6 +13,17 @@
 
 typedef enum
 {
+    VM_SUCCESS = 0,
+    VM_ERROR,
+    VM_STACK_OVERFLOW,
+    VM_STACK_UNDERFLOW,
+    VM_INVALID_INSTRUCTION,
+    VM_DIVIDE_BY_ZERO,
+    VM_MEMORY_ACCESS_VIOLATION
+} VMError;
+
+typedef enum
+{
     R_AX = 0,
     R_BX,
     R_CX,
@@ -58,16 +69,10 @@ typedef struct
     int num_labels;
 } VM;
 
-inline bool is_greater(VM* vm)
-{
-    return !(vm->cpu.flags & FL_ZF) && 
-        ((vm->cpu.flags & FL_SF) == 0) == ((vm->cpu.flags & FL_OF) == 0);
-}
-
-void execute_instruction(VM* vm, Instruction instr);
+VMError execute_instruction(VM* vm, Instruction instr);
 
 int get_operand_value(VM* vm, Operand operand);
-void set_operand_value(VM* vm, Operand operand, int value);
+VMError set_operand_value(VM* vm, Operand operand, int value);
 
 int find_label_address(VM* vm, int label_index);
 
