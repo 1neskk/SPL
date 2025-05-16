@@ -77,5 +77,4 @@ VMError set_operand_value(VM* vm, Operand operand, int value);
 int find_label_address(VM* vm, int label_index);
 
 VMError update_flags(VM* vm, int result, int operand1, int operand2, OpCode operation);
-
 #endif // VM_H

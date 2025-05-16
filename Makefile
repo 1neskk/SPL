@@ -11,7 +11,7 @@ debug:
 	mkdir -p build
 	echo "Building project in Debug mode..."
 	cd build && \
-	cmake .. -DCMAKE_BUILD_TYPE=Debug && \
+	cmake .. -DCMAKE_BUILD_TYPE=debug && \
 	make
 
 clean:

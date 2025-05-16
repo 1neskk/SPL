@@ -356,6 +356,7 @@ VMError set_operand_value(VM* vm, Operand operand, int value)
             fprintf(stderr, "Error: Cannot set value for this operand type\n");
             return VM_INVALID_INSTRUCTION;
     }
+    return VM_SUCCESS;
 }
 
 int find_label_address(VM* vm, int label_index)
