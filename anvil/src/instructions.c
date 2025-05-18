@@ -73,7 +73,6 @@ VMError execute_instruction(VM* vm, Instruction instr)
             break;
 
         case OP_DIV:
-            // TODO: Properly handle division by zero
             if (val2 == 0)
             {
                 fprintf(stderr, "Error: Division by zero\n");
@@ -347,9 +346,19 @@ VMError set_operand_value(VM* vm, Operand operand, int value)
     switch (operand.type)
     {
         case OPERAND_REGISTER:
+            if (operand.value.reg < 0 || operand.value.reg >= R_COUNT)
+            {
+                fprintf(stderr, "Error: Invalid register index %d\n", operand.value.reg);
+                return VM_INVALID_INSTRUCTION;
+            }
             vm->cpu.registers[operand.value.reg] = value;
             break;
         case OPERAND_MEMORY:
+            if (operand.value.mem < 0 || operand.value.mem >= MEMORY_SIZE)
+            {
+                fprintf(stderr, "Error: Invalid memory address %d\n", operand.value.mem);
+                return VM_INVALID_INSTRUCTION;
+            }
             vm->memory.data[operand.value.mem] = value;
             break;
         default:
