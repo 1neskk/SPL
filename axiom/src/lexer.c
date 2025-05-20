@@ -22,7 +22,7 @@ Lexer* init_lexer(char* source)
 void advance(Lexer* lexer)
 {
     lexer->position++;
-    if (lexer->position >= strlen(lexer->source))
+    if (lexer->position >= (int)strlen(lexer->source))
         lexer->current_char = '\0';
     else
     {
@@ -40,7 +40,7 @@ void advance(Lexer* lexer)
 char peek(Lexer* lexer)
 {
     int peek_pos = lexer->position + 1;
-    if (peek_pos >= strlen(lexer->source))
+    if (peek_pos >= (int)strlen(lexer->source))
         return '\0';
     return lexer->source[peek_pos];
 }
