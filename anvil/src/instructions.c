@@ -130,6 +130,38 @@ VMError execute_instruction(VM* vm, Instruction instr)
             vm->cpu.ip++;
             break;
 
+        case OP_AND:
+#ifdef USE_ASM
+            asm volatile(
+                "and %[val2], %[val1]\n\t"
+                "mov %[val1], %[result]"
+                : [result] "=r" (result)
+                : [val1] "r" (val1), [val2] "r" (val2)
+            );
+#else
+            result = val1 & val2;
+#endif
+            set_operand_value(vm, instr.operands[0], result);
+            update_flags(vm, result, val1, val2, OP_AND);
+            vm->cpu.ip++;
+            break;
+
+        case OP_OR:
+#ifdef USE_ASM
+            asm volatile(
+                "or %[val2], %[val1]\n\t"
+                "mov %[val1], %[result]"
+                : [result] "=r" (result)
+                : [val1] "r" (val1), [val2] "r" (val2)
+            );
+#else
+            result = val1 | val2;
+#endif
+            set_operand_value(vm, instr.operands[0], result);
+            update_flags(vm, result, val1, val2, OP_OR);
+            vm->cpu.ip++;
+            break;
+
         case OP_XOR:
 #ifdef USE_ASM
             asm volatile(
@@ -386,12 +418,6 @@ VMError update_flags(VM* vm, int result, int operand1, int operand2, OpCode oper
 {
     vm->cpu.flags = 0;
 
-    if (result == 0)
-        vm->cpu.flags |= FL_ZF;
-
-    if (result < 0)
-        vm->cpu.flags |= FL_SF;
-
     switch (operation)
     {
         case OP_ADD:
@@ -399,24 +425,47 @@ VMError update_flags(VM* vm, int result, int operand1, int operand2, OpCode oper
         case OP_SUB:
         case OP_DEC:
         case OP_CMP:
+            if (result == 0)
+                vm->cpu.flags |= FL_ZF;
 
-            if ((unsigned int)operand1 < (unsigned int)operand2)
+            if (result < 0)
+                vm->cpu.flags |= FL_SF;
+
+            if ((operation == OP_SUB || operation == OP_CMP || operation == OP_DEC)
+                ? (unsigned int)operand1 < (unsigned int)operand2
+                : (unsigned int)result < (unsigned int)operand1)
                 vm->cpu.flags |= FL_CF;
 
-            if (has_signed_overflow(operand1, (operation == OP_ADD || operation == OP_INC) ? operand2 : -operand2,
+            if (has_signed_overflow(operand1,
+                (operation == OP_ADD || operation == OP_INC) ? operand2 : -operand2,
                 result))
                 vm->cpu.flags |= FL_OF;
             break;
 
+        case OP_MUL:
+            if ((long long)operand1 * (long long)operand2 != (int)(operand1 * operand2))
+            {
+                vm->cpu.flags |= FL_CF;
+                vm->cpu.flags |= FL_OF;
+            }
+
+            if (result == 0)
+                vm->cpu.flags |= FL_ZF;
+
+            if (result < 0)
+                vm->cpu.flags |= FL_SF;
+            break;
+
+        case OP_DIV:
         case OP_AND:
         case OP_OR:
         case OP_XOR:
             // No flags to update for logical operations
-            break;
+            if (result == 0)
+                vm->cpu.flags |= FL_ZF;
 
-        case OP_MUL:
-        case OP_DIV:
-            // No flags to update for multiplication/division
+            if (result < 0)
+                vm->cpu.flags |= FL_SF;
             break;
 
         default:
