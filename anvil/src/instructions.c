@@ -109,6 +109,7 @@ VMError execute_instruction(VM* vm, Instruction instr)
             result = val1 + 1;
 #endif
             set_operand_value(vm, instr.operands[0], result);
+            update_flags(vm, result, val1, 1, OP_INC);
             vm->cpu.ip++;
             break;
 
@@ -125,6 +126,7 @@ VMError execute_instruction(VM* vm, Instruction instr)
             result = val1 - 1;
 #endif
             set_operand_value(vm, instr.operands[0], result);
+            update_flags(vm, result, val1, 1, OP_DEC);
             vm->cpu.ip++;
             break;
 
@@ -140,6 +142,7 @@ VMError execute_instruction(VM* vm, Instruction instr)
             result = val1 ^ val2;
 #endif
             set_operand_value(vm, instr.operands[0], result);
+            update_flags(vm, result, val1, val2, OP_XOR);
             vm->cpu.ip++;
             break;
 
@@ -168,8 +171,9 @@ VMError execute_instruction(VM* vm, Instruction instr)
                 : "cc", "eax"
             );
 #else
-            vm->cpu.flags = 0;
             result = val1 - val2;
+            vm->cpu.flags = 0;
+
             if (result == 0)
                 vm->cpu.flags |= FL_ZF;
 
@@ -388,11 +392,37 @@ VMError update_flags(VM* vm, int result, int operand1, int operand2, OpCode oper
     if (result < 0)
         vm->cpu.flags |= FL_SF;
 
-    if ((unsigned int)operand1 < (unsigned int)operand2)
-        vm->cpu.flags |= FL_CF;
+    switch (operation)
+    {
+        case OP_ADD:
+        case OP_INC:
+        case OP_SUB:
+        case OP_DEC:
+        case OP_CMP:
 
-    if (has_signed_overflow(operand1, -operand2, result))
-        vm->cpu.flags |= FL_OF;
+            if ((unsigned int)operand1 < (unsigned int)operand2)
+                vm->cpu.flags |= FL_CF;
+
+            if (has_signed_overflow(operand1, (operation == OP_ADD || operation == OP_INC) ? operand2 : -operand2,
+                result))
+                vm->cpu.flags |= FL_OF;
+            break;
+
+        case OP_AND:
+        case OP_OR:
+        case OP_XOR:
+            // No flags to update for logical operations
+            break;
+
+        case OP_MUL:
+        case OP_DIV:
+            // No flags to update for multiplication/division
+            break;
+
+        default:
+            fprintf(stderr, "Error: Invalid operation for flag update\n");
+            return VM_INVALID_INSTRUCTION;
+    }
 
     return VM_SUCCESS;
 }
