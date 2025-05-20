@@ -4,6 +4,7 @@ add_library(${PROJECT_NAME} STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include/vm.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/instructions.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/instructions.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/utils.S
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
