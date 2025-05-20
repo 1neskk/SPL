@@ -11,6 +11,8 @@ typedef enum
     OP_DIV,
     OP_INC,
     OP_DEC,
+    OP_AND,
+    OP_OR,
     OP_XOR,
     OP_CMP,
     OP_JMP,
