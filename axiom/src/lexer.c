@@ -1,13 +1,12 @@
 #include "lexer.h"
+
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
 
-Lexer* init_lexer(char* source)
-{
+Lexer* init_lexer(char* source) {
     Lexer* lexer = (Lexer*)malloc(sizeof(Lexer));
-    if (!lexer)
-    {
+    if (!lexer) {
         fprintf(stderr, "Memory allocation failed\n");
         return NULL;
     }
@@ -19,67 +18,56 @@ Lexer* init_lexer(char* source)
     return lexer;
 }
 
-void advance(Lexer* lexer)
-{
+void advance(Lexer* lexer) {
     lexer->position++;
     if (lexer->position >= (int)strlen(lexer->source))
         lexer->current_char = '\0';
-    else
-    {
+    else {
         lexer->current_char = lexer->source[lexer->position];
-        if (lexer->current_char == '\n')
-        {
+        if (lexer->current_char == '\n') {
             lexer->line++;
             lexer->column = 1;
-        }
-        else
+        } else
             lexer->column++;
     }
 }
 
-char peek(Lexer* lexer)
-{
+char peek(Lexer* lexer) {
     int peek_pos = lexer->position + 1;
-    if (peek_pos >= (int)strlen(lexer->source))
-        return '\0';
+    if (peek_pos >= (int)strlen(lexer->source)) return '\0';
     return lexer->source[peek_pos];
 }
 
-void skip_whitespace(Lexer* lexer)
-{
+void skip_whitespace(Lexer* lexer) {
     while (lexer->current_char != '\0' && isspace(lexer->current_char))
         advance(lexer);
 }
 
-void skip_comment(Lexer* lexer)
-{
+void skip_comment(Lexer* lexer) {
     while (lexer->current_char != '\0' && lexer->current_char != '\n')
         advance(lexer);
 }
 
-Token* number(Lexer* lexer)
-{
+Token* number(Lexer* lexer) {
     char* buffer = (char*)malloc(32);
     int index = 0;
-    while (lexer->current_char != '\0' && isdigit(lexer->current_char))
-    {
+    while (lexer->current_char != '\0' && isdigit(lexer->current_char)) {
         buffer[index++] = lexer->current_char;
         advance(lexer);
     }
-    buffer[index] = '\0'; // example: 123 => "123\0"
-    
+    buffer[index] = '\0';  // example: 123 => "123\0"
+
     Token* token = (Token*)malloc(sizeof(Token));
-    if (!token)
-    {
+    if (!token) {
         fprintf(stderr, "Memory allocation failed\n");
         free(buffer);
         return NULL;
     }
-    
+
     token->type = TOKEN_NUMBER;
     token->value = buffer;
     token->line = lexer->line;
     token->column = lexer->column - index;
-    
+
     return token;
 }

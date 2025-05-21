@@ -1,8 +1,7 @@
-#ifndef INSTRUCTIONS_H
-#define INSTRUCTIONS_H
+#ifndef INSTRUCTIONS_H_
+#define INSTRUCTIONS_H_
 
-typedef enum
-{
+typedef enum {
     OP_HALT,
     OP_MOV,
     OP_ADD,
@@ -29,19 +28,16 @@ typedef enum
     OP_RET,
 } OpCode;
 
-typedef enum
-{
+typedef enum {
     OPERAND_REGISTER,
     OPERAND_IMMEDIATE,
     OPERAND_MEMORY,
     OPERAND_LABEL,
 } OperandType;
 
-typedef struct
-{
+typedef struct {
     OperandType type;
-    union
-    {
+    union {
         int reg;
         int imm;
         int mem;
@@ -49,16 +45,15 @@ typedef struct
     } value;
 } Operand;
 
-typedef struct
-{
+typedef struct {
     OpCode opcode;
     Operand operands[2];
     int num_operands;
 } Instruction;
 
-inline bool has_signed_overflow(int a, int b, int result)
-{
-    return ((a >= 0 && b < 0 && result < 0) || (a < 0 && b >= 0 && result >= 0));
+inline bool has_signed_overflow(int a, int b, int result) {
+    return ((a >= 0 && b < 0 && result < 0) ||
+            (a < 0 && b >= 0 && result >= 0));
 }
 
-#endif // INSTRUCTIONS_H
+#endif  // INSTRUCTIONS_H_

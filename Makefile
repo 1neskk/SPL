@@ -1,4 +1,4 @@
-.PHONY: build debug clean format
+.PHONY: build debug clean format help
 
 build:
 	mkdir -p build
@@ -19,3 +19,11 @@ clean:
 
 format:
 	clang-format anvil/src/*.c anvil/include/*.h axiom/src/*.c axiom/include/*.h -i --style=file
+
+help:
+	@echo "Makefile commands:"
+	@echo "  build   - Build the project in Release mode"
+	@echo "  debug   - Build the project in Debug mode"
+	@echo "  clean   - Clean the build directory"
+	@echo "  format  - Format the source code according to Google style with an IndentWidth of 4"
+	@echo "  help    - Show this help message"

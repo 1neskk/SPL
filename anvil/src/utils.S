@@ -20,4 +20,4 @@ memcopy:
     jnz .loop                   # Repeat until size is zero
 
 .done:
-    ret                         # Return from functionn
+    ret                         # Return from function
