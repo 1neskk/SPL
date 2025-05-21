@@ -1,18 +1,18 @@
-#ifndef VM_H
-#define VM_H
+#ifndef VM_H_
+#define VM_H_
 
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
-#include <stdbool.h>
+
 #include "instructions.h"
 
-#define MEMORY_SIZE (1 << 16) // 64KB
+#define MEMORY_SIZE (1 << 16)  // 64KB
 #define STACK_START (MEMORY_SIZE - 1)
 #define STACK_SIZE 4096
 
-typedef enum
-{
+typedef enum {
     VM_SUCCESS = 0,
     VM_ERROR,
     VM_STACK_OVERFLOW,
@@ -22,8 +22,7 @@ typedef enum
     VM_MEMORY_ACCESS_VIOLATION
 } VMError;
 
-typedef enum
-{
+typedef enum {
     R_AX = 0,
     R_BX,
     R_CX,
@@ -37,29 +36,25 @@ typedef enum
     R_COUNT
 } Register;
 
-typedef enum
-{
-    FL_ZF = 1 << 0, // Zero Flag
-    FL_SF = 1 << 1, // Sign Flag
-    FL_OF = 1 << 2, // Overflow Flag
-    FL_CF = 1 << 3, // Carry Flag 
+typedef enum {
+    FL_ZF = 1 << 0,  // Zero Flag
+    FL_SF = 1 << 1,  // Sign Flag
+    FL_OF = 1 << 2,  // Overflow Flag
+    FL_CF = 1 << 3,  // Carry Flag
 } Flag;
 
-typedef struct
-{
+typedef struct {
     int registers[R_COUNT];
     uint32_t flags;
-    int ip; // Instruction Pointer
-    int sp; // Stack Pointer
+    int ip;  // Instruction Pointer
+    int sp;  // Stack Pointer
 } CPU;
 
-typedef struct
-{
+typedef struct {
     uint32_t data[MEMORY_SIZE];
 } Memory;
 
-typedef struct
-{
+typedef struct {
     CPU cpu;
     Memory memory;
     Instruction* program;
@@ -76,5 +71,6 @@ VMError set_operand_value(VM* vm, Operand operand, int value);
 
 int find_label_address(VM* vm, int label_index);
 
-VMError update_flags(VM* vm, int result, int operand1, int operand2, OpCode operation);
-#endif // VM_H
+VMError update_flags(VM* vm, int result, int operand1, int operand2,
+                     OpCode operation);
+#endif  // VM_H_

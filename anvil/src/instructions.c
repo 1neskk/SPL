@@ -1,37 +1,34 @@
 #include "vm.h"
 
-#if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || \
+    defined(_M_IX86)
 #define USE_ASM
 #endif
 
-VMError execute_instruction(VM* vm, Instruction instr)
-{
+VMError execute_instruction(VM* vm, Instruction instr) {
     int val1, val2, result;
     int addr, target_addr, return_addr;
 
     val1 = get_operand_value(vm, instr.operands[0]);
-    if (instr.num_operands > 1)
-        val2 = get_operand_value(vm, instr.operands[1]);
+    if (instr.num_operands > 1) val2 = get_operand_value(vm, instr.operands[1]);
 
-    switch (instr.opcode)
-    {
+    switch (instr.opcode) {
         case OP_HALT:
-            vm->cpu.ip = -1; // Stop execution
+            vm->cpu.ip = -1;  // Stop execution
             break;
 
         case OP_MOV:
             set_operand_value(vm, instr.operands[0], val2);
             vm->cpu.ip++;
             break;
-        
+
         case OP_ADD:
 #ifdef USE_ASM
             asm volatile(
                 "add %[val2], %[val1]\n\t"
                 "mov %[val1], %[result]"
-                : [result] "=r" (result)
-                : [val1] "r" (val1), [val2] "r" (val2)
-            );
+                : [result] "=r"(result)
+                : [val1] "r"(val1), [val2] "r"(val2));
 #else
             result = val1 + val2;
 #endif
@@ -45,9 +42,8 @@ VMError execute_instruction(VM* vm, Instruction instr)
             asm volatile(
                 "sub %[val2], %[val1]\n\t"
                 "mov %[val1], %[result]"
-                : [result] "=r" (result)
-                : [val1] "r" (val1), [val2] "r" (val2)
-            );
+                : [result] "=r"(result)
+                : [val1] "r"(val1), [val2] "r"(val2));
 #else
             result = val1 - val2;
 #endif
@@ -61,9 +57,8 @@ VMError execute_instruction(VM* vm, Instruction instr)
             asm volatile(
                 "imul %[val2], %[val1]\n\t"
                 "mov %[val1], %[result]"
-                : [result] "=r" (result)
-                : [val1] "r" (val1), [val2] "r" (val2)
-            );
+                : [result] "=r"(result)
+                : [val1] "r"(val1), [val2] "r"(val2));
 #else
             result = val1 * val2;
 #endif
@@ -73,8 +68,7 @@ VMError execute_instruction(VM* vm, Instruction instr)
             break;
 
         case OP_DIV:
-            if (val2 == 0)
-            {
+            if (val2 == 0) {
                 fprintf(stderr, "Error: Division by zero\n");
                 return VM_DIVIDE_BY_ZERO;
             }
@@ -85,10 +79,9 @@ VMError execute_instruction(VM* vm, Instruction instr)
                 "xor %%edx, %%edx\n\t"
                 "div %[val2]\n\t"
                 "mov %%eax, %[result]"
-                : [result] "=r" (result)
-                : [val1] "r" (val1), [val2] "r" (val2)
-                : "eax", "edx"
-            );
+                : [result] "=r"(result)
+                : [val1] "r"(val1), [val2] "r"(val2)
+                : "eax", "edx");
 #else
             result = val1 / val2;
 #endif
@@ -102,9 +95,8 @@ VMError execute_instruction(VM* vm, Instruction instr)
             asm volatile(
                 "inc %[val]\n\t"
                 "mov %[val], %[result]"
-                : [result] "=r" (result)
-                : [val] "r" (val1)
-            );
+                : [result] "=r"(result)
+                : [val] "r"(val1));
 #else
             result = val1 + 1;
 #endif
@@ -118,9 +110,8 @@ VMError execute_instruction(VM* vm, Instruction instr)
             asm volatile(
                 "dec %[val]\n\t"
                 "mov %[val], %[result]"
-                : [result] "=r" (result)
-                : [val] "r" (val1)
-            );
+                : [result] "=r"(result)
+                : [val] "r"(val1));
 
 #else
             result = val1 - 1;
@@ -135,9 +126,8 @@ VMError execute_instruction(VM* vm, Instruction instr)
             asm volatile(
                 "and %[val2], %[val1]\n\t"
                 "mov %[val1], %[result]"
-                : [result] "=r" (result)
-                : [val1] "r" (val1), [val2] "r" (val2)
-            );
+                : [result] "=r"(result)
+                : [val1] "r"(val1), [val2] "r"(val2));
 #else
             result = val1 & val2;
 #endif
@@ -151,9 +141,8 @@ VMError execute_instruction(VM* vm, Instruction instr)
             asm volatile(
                 "or %[val2], %[val1]\n\t"
                 "mov %[val1], %[result]"
-                : [result] "=r" (result)
-                : [val1] "r" (val1), [val2] "r" (val2)
-            );
+                : [result] "=r"(result)
+                : [val1] "r"(val1), [val2] "r"(val2));
 #else
             result = val1 | val2;
 #endif
@@ -167,9 +156,8 @@ VMError execute_instruction(VM* vm, Instruction instr)
             asm volatile(
                 "xor %[val2], %[val1]\n\t"
                 "mov %[val1], %[result]"
-                : [result] "=r" (result)
-                : [val1] "r" (val1), [val2] "r" (val2)
-            );
+                : [result] "=r"(result)
+                : [val1] "r"(val1), [val2] "r"(val2));
 #else
             result = val1 ^ val2;
 #endif
@@ -196,24 +184,19 @@ VMError execute_instruction(VM* vm, Instruction instr)
                 "or %[of], %%eax\n\t"
                 "4:\n\t"
                 "mov %%eax, %[result]"
-                : [result] "=r" (vm->cpu.flags)
-                : [val1] "r" (val1), [val2] "r" (val2),
-                  [zf] "i" (FL_ZF), [sf] "i" (FL_SF),
-                  [cf] "i" (FL_CF), [of] "i" (FL_OF)
-                : "cc", "eax"
-            );
+                : [result] "=r"(vm->cpu.flags)
+                : [val1] "r"(val1), [val2] "r"(val2), [zf] "i"(FL_ZF),
+                  [sf] "i"(FL_SF), [cf] "i"(FL_CF), [of] "i"(FL_OF)
+                : "cc", "eax");
 #else
             result = val1 - val2;
             vm->cpu.flags = 0;
 
-            if (result == 0)
-                vm->cpu.flags |= FL_ZF;
+            if (result == 0) vm->cpu.flags |= FL_ZF;
 
-            if (result < 0)
-                vm->cpu.flags |= FL_SF;
+            if (result < 0) vm->cpu.flags |= FL_SF;
 
-            if ((unsigned int)val1 < (unsigned int)val2)
-                vm->cpu.flags |= FL_CF;
+            if ((unsigned int)val1 < (unsigned int)val2) vm->cpu.flags |= FL_CF;
 
             if (has_signed_overflow(val1, -val2, result))
                 vm->cpu.flags |= FL_OF;
@@ -228,44 +211,52 @@ VMError execute_instruction(VM* vm, Instruction instr)
 
         case OP_JZ:
             if (vm->cpu.flags & FL_ZF)
-                vm->cpu.ip = find_label_address(vm, instr.operands[0].value.label);
+                vm->cpu.ip =
+                    find_label_address(vm, instr.operands[0].value.label);
             else
                 vm->cpu.ip++;
             break;
 
         case OP_JNZ:
             if (!(vm->cpu.flags & FL_ZF))
-                vm->cpu.ip = find_label_address(vm, instr.operands[0].value.label);
+                vm->cpu.ip =
+                    find_label_address(vm, instr.operands[0].value.label);
             else
                 vm->cpu.ip++;
             break;
 
         case OP_JG:
-            if (!(vm->cpu.flags & FL_ZF) &&
-                ((vm->cpu.flags & FL_SF) == 0) == ((vm->cpu.flags & FL_OF) == 0))
-                vm->cpu.ip = find_label_address(vm, instr.operands[0].value.label);
+            if (!(vm->cpu.flags & FL_ZF) && ((vm->cpu.flags & FL_SF) == 0) ==
+                                                ((vm->cpu.flags & FL_OF) == 0))
+                vm->cpu.ip =
+                    find_label_address(vm, instr.operands[0].value.label);
             else
                 vm->cpu.ip++;
             break;
 
         case OP_JL:
-            if (((vm->cpu.flags & FL_SF) == 0) != ((vm->cpu.flags & FL_OF) == 0))
-                vm->cpu.ip = find_label_address(vm, instr.operands[0].value.label);
+            if (((vm->cpu.flags & FL_SF) == 0) !=
+                ((vm->cpu.flags & FL_OF) == 0))
+                vm->cpu.ip =
+                    find_label_address(vm, instr.operands[0].value.label);
             else
                 vm->cpu.ip++;
             break;
 
         case OP_JGE:
-            if (((vm->cpu.flags & FL_SF) == 0) == ((vm->cpu.flags & FL_OF) == 0))
-                vm->cpu.ip = find_label_address(vm, instr.operands[0].value.label);
+            if (((vm->cpu.flags & FL_SF) == 0) ==
+                ((vm->cpu.flags & FL_OF) == 0))
+                vm->cpu.ip =
+                    find_label_address(vm, instr.operands[0].value.label);
             else
                 vm->cpu.ip++;
             break;
 
         case OP_JLE:
-            if ((vm->cpu.flags & FL_ZF) ||
-                ((vm->cpu.flags & FL_SF) == 0) != ((vm->cpu.flags & FL_OF) == 0))
-                vm->cpu.ip = find_label_address(vm, instr.operands[0].value.label);
+            if ((vm->cpu.flags & FL_ZF) || ((vm->cpu.flags & FL_SF) == 0) !=
+                                               ((vm->cpu.flags & FL_OF) == 0))
+                vm->cpu.ip =
+                    find_label_address(vm, instr.operands[0].value.label);
             else
                 vm->cpu.ip++;
             break;
@@ -279,8 +270,7 @@ VMError execute_instruction(VM* vm, Instruction instr)
                 addr = instr.operands[1].value.imm;
             else if (instr.operands[1].type == OPERAND_REGISTER)
                 addr = vm->cpu.registers[instr.operands[1].value.reg];
-            else
-            {
+            else {
                 fprintf(stderr, "Error: Invalid operand type for LEA\n");
                 return VM_INVALID_INSTRUCTION;
             }
@@ -290,9 +280,9 @@ VMError execute_instruction(VM* vm, Instruction instr)
             break;
 
         case OP_PUSH:
-            if (vm->cpu.sp <= (STACK_START - STACK_SIZE))
-            {
-                fprintf(stderr, "Error: Stack overflow at instruction %d\n", vm->cpu.ip);
+            if (vm->cpu.sp <= (STACK_START - STACK_SIZE)) {
+                fprintf(stderr, "Error: Stack overflow at instruction %d\n",
+                        vm->cpu.ip);
                 return VM_STACK_OVERFLOW;
             }
             vm->memory.data[--vm->cpu.sp] = val1;
@@ -300,34 +290,35 @@ VMError execute_instruction(VM* vm, Instruction instr)
             break;
 
         case OP_POP:
-            if (vm->cpu.sp >= vm->cpu.registers[R_BP])
-            {
-                fprintf(stderr, "Error: Stack underflow at instruction %d\n", vm->cpu.ip);
+            if (vm->cpu.sp >= vm->cpu.registers[R_BP]) {
+                fprintf(stderr, "Error: Stack underflow at instruction %d\n",
+                        vm->cpu.ip);
                 return VM_STACK_UNDERFLOW;
             }
 
-            if (instr.operands[0].type != OPERAND_REGISTER && 
-                instr.operands[0].type != OPERAND_MEMORY)
-            {
+            if (instr.operands[0].type != OPERAND_REGISTER &&
+                instr.operands[0].type != OPERAND_MEMORY) {
                 fprintf(stderr, "Error: Invalid destination for POP\n");
                 return VM_INVALID_INSTRUCTION;
             }
-            
-            set_operand_value(vm, instr.operands[0], vm->memory.data[vm->cpu.sp++]);
+
+            set_operand_value(vm, instr.operands[0],
+                              vm->memory.data[vm->cpu.sp++]);
             vm->cpu.ip++;
             break;
 
         case OP_CALL:
-            if (vm->cpu.sp <= (STACK_START - STACK_SIZE))
-            {
-                fprintf(stderr, "Error: Stack overflow on CALL instruction at %d\n", vm->cpu.ip);
+            if (vm->cpu.sp <= (STACK_START - STACK_SIZE)) {
+                fprintf(stderr,
+                        "Error: Stack overflow on CALL instruction at %d\n",
+                        vm->cpu.ip);
                 return VM_STACK_OVERFLOW;
             }
 
             target_addr = find_label_address(vm, instr.operands[0].value.label);
-            if (target_addr < 0 || target_addr >= vm->program_size)
-            {
-                fprintf(stderr, "Error: Invalid CALL target address %d\n", target_addr);
+            if (target_addr < 0 || target_addr >= vm->program_size) {
+                fprintf(stderr, "Error: Invalid CALL target address %d\n",
+                        target_addr);
                 return VM_INVALID_INSTRUCTION;
             }
 
@@ -336,16 +327,17 @@ VMError execute_instruction(VM* vm, Instruction instr)
             break;
 
         case OP_RET:
-            if (vm->cpu.sp >= vm->cpu.registers[R_BP])
-            {
-                fprintf(stderr, "Error: Stack underflow on RET instruction at %d\n", vm->cpu.ip);
+            if (vm->cpu.sp >= vm->cpu.registers[R_BP]) {
+                fprintf(stderr,
+                        "Error: Stack underflow on RET instruction at %d\n",
+                        vm->cpu.ip);
                 return VM_STACK_UNDERFLOW;
             }
 
             return_addr = vm->memory.data[vm->cpu.sp++];
-            if (return_addr < 0 || return_addr >= vm->program_size)
-            {
-                fprintf(stderr, "Error: Invalid return address %d\n", return_addr);
+            if (return_addr < 0 || return_addr >= vm->program_size) {
+                fprintf(stderr, "Error: Invalid return address %d\n",
+                        return_addr);
                 return VM_INVALID_INSTRUCTION;
             }
 
@@ -359,10 +351,8 @@ VMError execute_instruction(VM* vm, Instruction instr)
     return VM_SUCCESS;
 }
 
-int get_operand_value(VM* vm, Operand operand)
-{
-    switch (operand.type)
-    {
+int get_operand_value(VM* vm, Operand operand) {
+    switch (operand.type) {
         case OPERAND_REGISTER:
             return vm->cpu.registers[operand.value.reg];
         case OPERAND_IMMEDIATE:
@@ -377,22 +367,20 @@ int get_operand_value(VM* vm, Operand operand)
     }
 }
 
-VMError set_operand_value(VM* vm, Operand operand, int value)
-{
-    switch (operand.type)
-    {
+VMError set_operand_value(VM* vm, Operand operand, int value) {
+    switch (operand.type) {
         case OPERAND_REGISTER:
-            if (operand.value.reg < 0 || operand.value.reg >= R_COUNT)
-            {
-                fprintf(stderr, "Error: Invalid register index %d\n", operand.value.reg);
+            if (operand.value.reg < 0 || operand.value.reg >= R_COUNT) {
+                fprintf(stderr, "Error: Invalid register index %d\n",
+                        operand.value.reg);
                 return VM_INVALID_INSTRUCTION;
             }
             vm->cpu.registers[operand.value.reg] = value;
             break;
         case OPERAND_MEMORY:
-            if (operand.value.mem < 0 || operand.value.mem >= MEMORY_SIZE)
-            {
-                fprintf(stderr, "Error: Invalid memory address %d\n", operand.value.mem);
+            if (operand.value.mem < 0 || operand.value.mem >= MEMORY_SIZE) {
+                fprintf(stderr, "Error: Invalid memory address %d\n",
+                        operand.value.mem);
                 return VM_INVALID_INSTRUCTION;
             }
             vm->memory.data[operand.value.mem] = value;
@@ -404,56 +392,52 @@ VMError set_operand_value(VM* vm, Operand operand, int value)
     return VM_SUCCESS;
 }
 
-int find_label_address(VM* vm, int label_index)
-{
-    if (label_index < 0 || label_index >= vm->num_labels)
-    {
+int find_label_address(VM* vm, int label_index) {
+    if (label_index < 0 || label_index >= vm->num_labels) {
         fprintf(stderr, "Error: Invalid label index\n");
         return 0;
     }
     return vm->label_addresses[label_index];
 }
 
-VMError update_flags(VM* vm, int result, int operand1, int operand2, OpCode operation)
-{
+VMError update_flags(VM* vm, int result, int operand1, int operand2,
+                     OpCode operation) {
     vm->cpu.flags = 0;
 
-    switch (operation)
-    {
+    switch (operation) {
         case OP_ADD:
         case OP_INC:
         case OP_SUB:
         case OP_DEC:
         case OP_CMP:
-            if (result == 0)
-                vm->cpu.flags |= FL_ZF;
+            if (result == 0) vm->cpu.flags |= FL_ZF;
 
-            if (result < 0)
-                vm->cpu.flags |= FL_SF;
+            if (result < 0) vm->cpu.flags |= FL_SF;
 
-            if ((operation == OP_SUB || operation == OP_CMP || operation == OP_DEC)
-                ? (unsigned int)operand1 < (unsigned int)operand2
-                : (unsigned int)result < (unsigned int)operand1)
+            if ((operation == OP_SUB || operation == OP_CMP ||
+                 operation == OP_DEC)
+                    ? (unsigned int)operand1 < (unsigned int)operand2
+                    : (unsigned int)result < (unsigned int)operand1)
                 vm->cpu.flags |= FL_CF;
 
             if (has_signed_overflow(operand1,
-                (operation == OP_ADD || operation == OP_INC) ? operand2 : -operand2,
-                result))
+                                    (operation == OP_ADD || operation == OP_INC)
+                                        ? operand2
+                                        : -operand2,
+                                    result))
                 vm->cpu.flags |= FL_OF;
             break;
 
         case OP_MUL:
-            if ((long long)operand1 * (long long)operand2 != (int)(operand1 * operand2))
-            {
+            if ((long long)operand1 * (long long)operand2 !=
+                (int)(operand1 * operand2)) {
                 vm->cpu.flags |= FL_CF;
                 vm->cpu.flags |= FL_OF;
             }
 
-            if (result == 0)
-                vm->cpu.flags |= FL_ZF;
+            if (result == 0) vm->cpu.flags |= FL_ZF;
 
-            if (result < 0)
-                vm->cpu.flags |= FL_SF;
+            if (result < 0) vm->cpu.flags |= FL_SF;
             break;
 
         case OP_DIV:
@@ -461,11 +445,9 @@ VMError update_flags(VM* vm, int result, int operand1, int operand2, OpCode oper
         case OP_OR:
         case OP_XOR:
             // No flags to update for logical operations
-            if (result == 0)
-                vm->cpu.flags |= FL_ZF;
+            if (result == 0) vm->cpu.flags |= FL_ZF;
 
-            if (result < 0)
-                vm->cpu.flags |= FL_SF;
+            if (result < 0) vm->cpu.flags |= FL_SF;
             break;
 
         default:
