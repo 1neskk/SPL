@@ -70,7 +70,7 @@ VMError execute_instruction(VM* vm, Instruction instr) {
         case OP_DIV:
             if (val2 == 0) {
                 fprintf(stderr, "Error: Division by zero\n");
-                return VM_DIVIDE_BY_ZERO;
+                return VM_ERROR_DIVIDE_BY_ZERO;
             }
 
 #ifdef USE_ASM
@@ -272,7 +272,7 @@ VMError execute_instruction(VM* vm, Instruction instr) {
                 addr = vm->cpu.registers[instr.operands[1].value.reg];
             else {
                 fprintf(stderr, "Error: Invalid operand type for LEA\n");
-                return VM_INVALID_INSTRUCTION;
+                return VM_ERROR_INVALID_INSTRUCTION;
             }
 
             set_operand_value(vm, instr.operands[0], addr);
@@ -283,7 +283,7 @@ VMError execute_instruction(VM* vm, Instruction instr) {
             if (vm->cpu.sp <= (STACK_START - STACK_SIZE)) {
                 fprintf(stderr, "Error: Stack overflow at instruction %d\n",
                         vm->cpu.ip);
-                return VM_STACK_OVERFLOW;
+                return VM_ERROR_STACK_OVERFLOW;
             }
             vm->memory.data[--vm->cpu.sp] = val1;
             vm->cpu.ip++;
@@ -293,13 +293,13 @@ VMError execute_instruction(VM* vm, Instruction instr) {
             if (vm->cpu.sp >= vm->cpu.registers[R_BP]) {
                 fprintf(stderr, "Error: Stack underflow at instruction %d\n",
                         vm->cpu.ip);
-                return VM_STACK_UNDERFLOW;
+                return VM_ERROR_STACK_UNDERFLOW;
             }
 
             if (instr.operands[0].type != OPERAND_REGISTER &&
                 instr.operands[0].type != OPERAND_MEMORY) {
                 fprintf(stderr, "Error: Invalid destination for POP\n");
-                return VM_INVALID_INSTRUCTION;
+                return VM_ERROR_INVALID_INSTRUCTION;
             }
 
             set_operand_value(vm, instr.operands[0],
@@ -312,14 +312,14 @@ VMError execute_instruction(VM* vm, Instruction instr) {
                 fprintf(stderr,
                         "Error: Stack overflow on CALL instruction at %d\n",
                         vm->cpu.ip);
-                return VM_STACK_OVERFLOW;
+                return VM_ERROR_STACK_OVERFLOW;
             }
 
             target_addr = find_label_address(vm, instr.operands[0].value.label);
             if (target_addr < 0 || target_addr >= vm->program_size) {
                 fprintf(stderr, "Error: Invalid CALL target address %d\n",
                         target_addr);
-                return VM_INVALID_INSTRUCTION;
+                return VM_ERROR_INVALID_INSTRUCTION;
             }
 
             vm->memory.data[--vm->cpu.sp] = vm->cpu.ip + 1;
@@ -331,14 +331,14 @@ VMError execute_instruction(VM* vm, Instruction instr) {
                 fprintf(stderr,
                         "Error: Stack underflow on RET instruction at %d\n",
                         vm->cpu.ip);
-                return VM_STACK_UNDERFLOW;
+                return VM_ERROR_STACK_UNDERFLOW;
             }
 
             return_addr = vm->memory.data[vm->cpu.sp++];
             if (return_addr < 0 || return_addr >= vm->program_size) {
                 fprintf(stderr, "Error: Invalid return address %d\n",
                         return_addr);
-                return VM_INVALID_INSTRUCTION;
+                return VM_ERROR_INVALID_INSTRUCTION;
             }
 
             vm->cpu.ip = return_addr;
@@ -346,7 +346,7 @@ VMError execute_instruction(VM* vm, Instruction instr) {
 
         default:
             fprintf(stderr, "Error: Unknown opcode %d\n", instr.opcode);
-            return VM_INVALID_INSTRUCTION;
+            return VM_ERROR_INVALID_INSTRUCTION;
     }
     return VM_SUCCESS;
 }
@@ -373,7 +373,7 @@ VMError set_operand_value(VM* vm, Operand operand, int value) {
             if (operand.value.reg < 0 || operand.value.reg >= R_COUNT) {
                 fprintf(stderr, "Error: Invalid register index %d\n",
                         operand.value.reg);
-                return VM_INVALID_INSTRUCTION;
+                return VM_ERROR_INVALID_INSTRUCTION;
             }
             vm->cpu.registers[operand.value.reg] = value;
             break;
@@ -381,13 +381,13 @@ VMError set_operand_value(VM* vm, Operand operand, int value) {
             if (operand.value.mem < 0 || operand.value.mem >= MEMORY_SIZE) {
                 fprintf(stderr, "Error: Invalid memory address %d\n",
                         operand.value.mem);
-                return VM_INVALID_INSTRUCTION;
+                return VM_ERROR_INVALID_INSTRUCTION;
             }
             vm->memory.data[operand.value.mem] = value;
             break;
         default:
             fprintf(stderr, "Error: Cannot set value for this operand type\n");
-            return VM_INVALID_INSTRUCTION;
+            return VM_ERROR_INVALID_INSTRUCTION;
     }
     return VM_SUCCESS;
 }
@@ -452,7 +452,7 @@ VMError update_flags(VM* vm, int result, int operand1, int operand2,
 
         default:
             fprintf(stderr, "Error: Invalid operation for flag update\n");
-            return VM_INVALID_INSTRUCTION;
+            return VM_ERROR_INVALID_INSTRUCTION;
     }
 
     return VM_SUCCESS;
