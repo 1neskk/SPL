@@ -7,20 +7,10 @@
 #include <stdlib.h>
 
 #include "instructions.h"
+#include "memory.h"
 
-#define MEMORY_SIZE (1 << 16)  // 64KB
 #define STACK_START (MEMORY_SIZE - 1)
 #define STACK_SIZE 4096
-
-typedef enum {
-    VM_SUCCESS = 0,
-    VM_ERROR,
-    VM_STACK_OVERFLOW,
-    VM_STACK_UNDERFLOW,
-    VM_INVALID_INSTRUCTION,
-    VM_DIVIDE_BY_ZERO,
-    VM_MEMORY_ACCESS_VIOLATION
-} VMError;
 
 typedef enum {
     R_AX = 0,
@@ -49,10 +39,6 @@ typedef struct {
     int ip;  // Instruction Pointer
     int sp;  // Stack Pointer
 } CPU;
-
-typedef struct {
-    uint32_t data[MEMORY_SIZE];
-} Memory;
 
 typedef struct {
     CPU cpu;

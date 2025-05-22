@@ -3,8 +3,11 @@ project(anvil C ASM)
 add_library(${PROJECT_NAME} STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include/vm.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/instructions.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/memory.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/error.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/instructions.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/utils.S
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/memory.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/memory.s
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
