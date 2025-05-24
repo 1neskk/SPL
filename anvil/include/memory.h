@@ -2,6 +2,7 @@
 #define MEMORY_H_
 
 #include <stdint.h>
+
 #include "error.h"
 
 #define MEMORY_SIZE (1 << 16)
