@@ -13,7 +13,6 @@ add_library(${PROJECT_NAME} STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/memory.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/memory.s
     ${CMAKE_CURRENT_SOURCE_DIR}/src/io.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/io.s
     ${CMAKE_CURRENT_SOURCE_DIR}/src/assembler.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/parser.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/error.c
