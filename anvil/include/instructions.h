@@ -26,7 +26,17 @@ typedef enum {
     OP_POP,
     OP_CALL,
     OP_RET,
+    OP_NOP,
+    OP_OUT,
+    OP_PREG
 } OpCode;
+
+typedef struct {
+    int base_reg;
+    int index_reg;
+    int scale;
+    int offset;
+} MemoryRef;
 
 typedef enum {
     OPERAND_REGISTER,
@@ -41,6 +51,7 @@ typedef struct {
         int reg;
         int imm;
         int mem;
+        MemoryRef mem_ref;
         int label;
     } value;
 } Operand;
@@ -51,9 +62,6 @@ typedef struct {
     int num_operands;
 } Instruction;
 
-inline bool has_signed_overflow(int a, int b, int result) {
-    return ((a >= 0 && b < 0 && result < 0) ||
-            (a < 0 && b >= 0 && result >= 0));
-}
+bool has_signed_overflow(int a, int b, int result);
 
 #endif  // INSTRUCTIONS_H_

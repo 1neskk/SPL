@@ -1,4 +1,4 @@
-.PHONY: build debug clean format help
+.PHONY: build debug test clean format help
 
 build:
 	mkdir -p build
@@ -12,6 +12,13 @@ debug:
 	echo "Building project in Debug mode..."
 	cd build && \
 	cmake .. -DCMAKE_BUILD_TYPE=debug && \
+	make
+
+test:
+	mkdir -p build
+	echo "Building project in Test mode..."
+	cd build && \
+	cmake .. -DCMAKE_BUILD_TYPE=test && \
 	make
 
 clean:

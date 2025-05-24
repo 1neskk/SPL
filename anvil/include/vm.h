@@ -13,7 +13,8 @@
 #define STACK_SIZE 4096
 
 typedef enum {
-    R_AX = 0,
+    R_NONE = 0,
+    R_AX,
     R_BX,
     R_CX,
     R_DX,
@@ -59,4 +60,16 @@ int find_label_address(VM* vm, int label_index);
 
 VMError update_flags(VM* vm, int result, int operand1, int operand2,
                      OpCode operation);
+
+// Core VM functions
+VMError vm_init(VM* vm, Instruction* program, int program_size,
+                int* label_addresses, int num_labels);
+VM* vm_create(Instruction* program, int program_size, int* label_addresses,
+              int num_labels);
+void vm_destroy(VM* vm);
+VMError vm_run(VM* vm);
+VMError vm_step(VM* vm);
+
+void vm_print_state(VM* vm);
+void vm_dump_memory(VM* vm, uint32_t start, uint32_t end);
 #endif  // VM_H_

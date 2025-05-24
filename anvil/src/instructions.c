@@ -1,3 +1,4 @@
+#include "io.h"
 #include "vm.h"
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || \
@@ -6,6 +7,8 @@
 #endif
 
 VMError execute_instruction(VM* vm, Instruction instr) {
+    VMError err = VM_ERROR_UNKNOWN;
+    int value;
     int val1, val2, result;
     int addr, target_addr, return_addr;
 
@@ -18,7 +21,40 @@ VMError execute_instruction(VM* vm, Instruction instr) {
             break;
 
         case OP_MOV:
-            set_operand_value(vm, instr.operands[0], val2);
+            value = get_operand_value(vm, instr.operands[1]);
+            if (instr.operands[0].type == OPERAND_REGISTER) {
+                vm->cpu.registers[instr.operands[0].value.reg] = value;
+            } else if (instr.operands[0].type == OPERAND_MEMORY) {
+                MemoryRef mem_ref = instr.operands[0].value.mem_ref;
+                uint32_t effective_address = 0;
+
+                if (mem_ref.base_reg >= R_NONE) {
+                    if (mem_ref.base_reg >= R_NONE &&
+                        mem_ref.base_reg < R_COUNT) {
+                        effective_address +=
+                            vm->cpu.registers[mem_ref.base_reg];
+                    } else {
+                        fprintf(stderr,
+                                "Error: Invalid base register in MOV "
+                                "destination\n");
+                        return VM_ERROR_INVALID_REGISTER;
+                    }
+                }
+
+                effective_address += mem_ref.offset;
+
+                err = write_memory(&vm->memory, effective_address, value);
+                if (err != VM_SUCCESS) {
+                    fprintf(stderr,
+                            "Error: Failed to write to memory at 0x%x. Error "
+                            "code: %d\n",
+                            effective_address, err);
+                    return err;
+                }
+            } else {
+                fprintf(stderr, "Error: Invalid destination for MOV\n");
+                return VM_ERROR_INVALID_INSTRUCTION;
+            }
             vm->cpu.ip++;
             break;
 
@@ -344,6 +380,62 @@ VMError execute_instruction(VM* vm, Instruction instr) {
             vm->cpu.ip = return_addr;
             break;
 
+        case OP_NOP:
+            vm->cpu.ip++;
+            break;
+
+        case OP_OUT:
+            if (instr.operands[0].type != OPERAND_REGISTER &&
+                instr.operands[0].type != OPERAND_MEMORY) {
+                fprintf(stderr, "Error: Invalid operand type for OUT\n");
+                return VM_ERROR_INVALID_INSTRUCTION;
+            }
+
+            value = get_operand_value(vm, instr.operands[0]);
+            int format_or_length = 0;
+            if (instr.num_operands > 1) {
+                if (instr.operands[1].type == OPERAND_IMMEDIATE) {
+                    format_or_length = get_operand_value(vm, instr.operands[1]);
+                } else if (instr.operands[1].type == OPERAND_REGISTER) {
+                    format_or_length =
+                        vm->cpu.registers[instr.operands[1].value.reg];
+                } else {
+                    fprintf(stderr, "Error: Invalid operand type for OUT\n");
+                    return VM_ERROR_INVALID_INSTRUCTION;
+                }
+            }
+
+            if (instr.operands[0].type == OPERAND_REGISTER) {
+                if (instr.num_operands >= 1) {
+                    vm_print_string(
+                        vm, vm->cpu.registers[instr.operands[0].value.reg],
+                        format_or_length);
+                }
+            } else if (instr.operands[0].type == OPERAND_MEMORY) {
+                if (instr.num_operands >= 1) {
+                    vm_print_string(
+                        vm, vm->memory.data[instr.operands[0].value.mem],
+                        format_or_length);
+                }
+            } else {
+                fprintf(stderr, "Error: Invalid operand type for OUT\n");
+                return VM_ERROR_INVALID_INSTRUCTION;
+            }
+
+            vm->cpu.ip++;
+            break;
+
+        case OP_PREG:
+            if (instr.operands[0].type != OPERAND_REGISTER) {
+                fprintf(stderr, "Error: Invalid operand type for OUT\n");
+                return VM_ERROR_INVALID_INSTRUCTION;
+            }
+            uint32_t format = (instr.num_operands > 1)
+                                  ? get_operand_value(vm, instr.operands[1])
+                                  : 0;
+            vm_print_reg_value(vm, format, instr.operands[0].value.reg);
+            vm->cpu.ip++;
+            break;
         default:
             fprintf(stderr, "Error: Unknown opcode %d\n", instr.opcode);
             return VM_ERROR_INVALID_INSTRUCTION;
@@ -358,7 +450,27 @@ int get_operand_value(VM* vm, Operand operand) {
         case OPERAND_IMMEDIATE:
             return operand.value.imm;
         case OPERAND_MEMORY:
-            return vm->memory.data[operand.value.mem];
+            int effective_address = 0;
+            if (operand.value.mem_ref.base_reg != R_NONE) {
+                effective_address +=
+                    vm->cpu.registers[operand.value.mem_ref.base_reg];
+            }
+
+            if (operand.value.mem_ref.index_reg != R_NONE) {
+                effective_address +=
+                    vm->cpu.registers[operand.value.mem_ref.index_reg] *
+                    operand.value.mem_ref.scale;
+            }
+
+            effective_address += operand.value.mem_ref.offset;
+
+            if (effective_address < 0 || effective_address >= MEMORY_SIZE) {
+                fprintf(stderr, "Error: Invalid memory address %d\n",
+                        effective_address);
+                return 0;
+            }
+
+            return vm->memory.data[effective_address];
         case OPERAND_LABEL:
             return vm->label_addresses[operand.value.label];
         default:
@@ -456,4 +568,9 @@ VMError update_flags(VM* vm, int result, int operand1, int operand2,
     }
 
     return VM_SUCCESS;
+}
+
+bool has_signed_overflow(int a, int b, int result) {
+    return ((a >= 0 && b < 0 && result < 0) ||
+            (a < 0 && b >= 0 && result >= 0));
 }
