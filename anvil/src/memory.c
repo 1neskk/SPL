@@ -34,6 +34,19 @@ VMError write_memory(Memory* memory, uint32_t address, uint32_t value) {
     return VM_SUCCESS;
 }
 
+VMError write_memory_ref(Memory* memory, MemoryRef mem_ref, uint32_t value) {
+    if (mem_ref.base_reg >= MEMORY_SIZE || mem_ref.index_reg >= MEMORY_SIZE) {
+        return VM_ERROR_MEMORY_ACCESS;
+    }
+    uint32_t effective_address =
+        mem_ref.base_reg + (mem_ref.index_reg * mem_ref.scale) + mem_ref.offset;
+    if (effective_address >= MEMORY_SIZE) {
+        return VM_ERROR_MEMORY_ACCESS;
+    }
+    memory->data[effective_address] = value;
+    return VM_SUCCESS;
+}
+
 VMError clear_memory(Memory* memory) {
 #ifdef USE_ASM
     memclear_(memory->data, MEMORY_SIZE);

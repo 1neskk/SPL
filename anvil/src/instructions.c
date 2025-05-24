@@ -1,3 +1,4 @@
+#include "io.h"
 #include "vm.h"
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || \
@@ -6,6 +7,8 @@
 #endif
 
 VMError execute_instruction(VM* vm, Instruction instr) {
+    VMError err = VM_SUCCESS;
+    int value;
     int val1, val2, result;
     int addr, target_addr, return_addr;
 
@@ -18,7 +21,42 @@ VMError execute_instruction(VM* vm, Instruction instr) {
             break;
 
         case OP_MOV:
-            set_operand_value(vm, instr.operands[0], val2);
+            value = get_operand_value(vm, instr.operands[1]);
+            if (instr.operands[0].type == OPERAND_REGISTER) {
+                vm->cpu.registers[instr.operands[0].value.reg] = value;
+            } else if (instr.operands[0].type == OPERAND_MEMORY) {
+                MemoryRef mem_ref = instr.operands[0].value.mem_ref;
+                uint32_t effective_address = 0;
+
+                if (mem_ref.base_reg >= R_NONE) {
+                    if (mem_ref.base_reg >= R_NONE &&
+                        mem_ref.base_reg < R_COUNT) {
+                        effective_address +=
+                            vm->cpu.registers[mem_ref.base_reg];
+                    } else {
+                        err = VM_ERROR_INVALID_REGISTER;
+                        fprintf(stderr,
+                                "Error: Invalid base register in MOV "
+                                "destination\n");
+                        return err;
+                    }
+                }
+
+                effective_address += mem_ref.offset;
+
+                err = write_memory(&vm->memory, effective_address, value);
+                if (err != VM_SUCCESS) {
+                    fprintf(stderr,
+                            "Error: Failed to write to memory at 0x%x. Error "
+                            "code: %d\n",
+                            effective_address, err);
+                    return err;
+                }
+            } else {
+                err = VM_ERROR_INVALID_OPERAND;
+                fprintf(stderr, "Error: Invalid destination for MOV\n");
+                return err;
+            }
             vm->cpu.ip++;
             break;
 
@@ -32,8 +70,16 @@ VMError execute_instruction(VM* vm, Instruction instr) {
 #else
             result = val1 + val2;
 #endif
-            set_operand_value(vm, instr.operands[0], result);
-            update_flags(vm, result, val1, val2, OP_ADD);
+            err = set_operand_value(vm, instr.operands[0], result);
+            if (err != VM_SUCCESS) {
+                return err;
+            }
+
+            err = update_flags(vm, result, val1, val2, OP_ADD);
+            if (err != VM_SUCCESS) {
+                return err;
+            }
+
             vm->cpu.ip++;
             break;
 
@@ -47,8 +93,16 @@ VMError execute_instruction(VM* vm, Instruction instr) {
 #else
             result = val1 - val2;
 #endif
-            set_operand_value(vm, instr.operands[0], result);
-            update_flags(vm, result, val1, val2, OP_SUB);
+            err = set_operand_value(vm, instr.operands[0], result);
+            if (err != VM_SUCCESS) {
+                return err;
+            }
+
+            err = update_flags(vm, result, val1, val2, OP_SUB);
+            if (err != VM_SUCCESS) {
+                return err;
+            }
+
             vm->cpu.ip++;
             break;
 
@@ -62,15 +116,24 @@ VMError execute_instruction(VM* vm, Instruction instr) {
 #else
             result = val1 * val2;
 #endif
-            set_operand_value(vm, instr.operands[0], result);
-            update_flags(vm, result, val1, val2, OP_MUL);
+            err = set_operand_value(vm, instr.operands[0], result);
+            if (err != VM_SUCCESS) {
+                return err;
+            }
+
+            err = update_flags(vm, result, val1, val2, OP_MUL);
+            if (err != VM_SUCCESS) {
+                return err;
+            }
+
             vm->cpu.ip++;
             break;
 
         case OP_DIV:
             if (val2 == 0) {
+                err = VM_ERROR_DIVIDE_BY_ZERO;
                 fprintf(stderr, "Error: Division by zero\n");
-                return VM_ERROR_DIVIDE_BY_ZERO;
+                return err; 
             }
 
 #ifdef USE_ASM
@@ -85,8 +148,16 @@ VMError execute_instruction(VM* vm, Instruction instr) {
 #else
             result = val1 / val2;
 #endif
-            set_operand_value(vm, instr.operands[0], result);
-            update_flags(vm, result, val1, val2, OP_DIV);
+            err = set_operand_value(vm, instr.operands[0], result);
+            if (err != VM_SUCCESS) {
+                return err;
+            }
+
+            err = update_flags(vm, result, val1, val2, OP_DIV);
+            if (err != VM_SUCCESS) {
+                return err;
+            }
+
             vm->cpu.ip++;
             break;
 
@@ -100,8 +171,16 @@ VMError execute_instruction(VM* vm, Instruction instr) {
 #else
             result = val1 + 1;
 #endif
-            set_operand_value(vm, instr.operands[0], result);
-            update_flags(vm, result, val1, 1, OP_INC);
+            err = set_operand_value(vm, instr.operands[0], result);
+            if (err != VM_SUCCESS) {
+                return err;
+            }
+
+            err = update_flags(vm, result, val1, 1, OP_INC);
+            if (err != VM_SUCCESS) {
+                return err;
+            }
+
             vm->cpu.ip++;
             break;
 
@@ -116,8 +195,16 @@ VMError execute_instruction(VM* vm, Instruction instr) {
 #else
             result = val1 - 1;
 #endif
-            set_operand_value(vm, instr.operands[0], result);
-            update_flags(vm, result, val1, 1, OP_DEC);
+            err = set_operand_value(vm, instr.operands[0], result);
+            if (err != VM_SUCCESS) {
+                return err;
+            }
+
+            err = update_flags(vm, result, val1, 1, OP_DEC);
+            if (err != VM_SUCCESS) {
+                return err;
+            }
+
             vm->cpu.ip++;
             break;
 
@@ -131,8 +218,16 @@ VMError execute_instruction(VM* vm, Instruction instr) {
 #else
             result = val1 & val2;
 #endif
-            set_operand_value(vm, instr.operands[0], result);
-            update_flags(vm, result, val1, val2, OP_AND);
+            err = set_operand_value(vm, instr.operands[0], result);
+            if (err != VM_SUCCESS) {
+                return err;
+            }
+
+            err = update_flags(vm, result, val1, val2, OP_AND);
+            if (err != VM_SUCCESS) {
+                return err;
+            }
+
             vm->cpu.ip++;
             break;
 
@@ -146,8 +241,16 @@ VMError execute_instruction(VM* vm, Instruction instr) {
 #else
             result = val1 | val2;
 #endif
-            set_operand_value(vm, instr.operands[0], result);
-            update_flags(vm, result, val1, val2, OP_OR);
+            err = set_operand_value(vm, instr.operands[0], result);
+            if (err != VM_SUCCESS) {
+                return err;
+            }
+
+            err = update_flags(vm, result, val1, val2, OP_OR);
+            if (err != VM_SUCCESS) {
+                return err;
+            }
+
             vm->cpu.ip++;
             break;
 
@@ -161,8 +264,16 @@ VMError execute_instruction(VM* vm, Instruction instr) {
 #else
             result = val1 ^ val2;
 #endif
-            set_operand_value(vm, instr.operands[0], result);
-            update_flags(vm, result, val1, val2, OP_XOR);
+            err = set_operand_value(vm, instr.operands[0], result);
+            if (err != VM_SUCCESS) {
+                return err;
+            }
+
+            err= update_flags(vm, result, val1, val2, OP_XOR);
+            if (err != VM_SUCCESS) {
+                return err;
+            }
+
             vm->cpu.ip++;
             break;
 
@@ -200,7 +311,6 @@ VMError execute_instruction(VM* vm, Instruction instr) {
 
             if (has_signed_overflow(val1, -val2, result))
                 vm->cpu.flags |= FL_OF;
-
 #endif
             vm->cpu.ip++;
             break;
@@ -271,19 +381,25 @@ VMError execute_instruction(VM* vm, Instruction instr) {
             else if (instr.operands[1].type == OPERAND_REGISTER)
                 addr = vm->cpu.registers[instr.operands[1].value.reg];
             else {
+                err = VM_ERROR_INVALID_OPERAND;
                 fprintf(stderr, "Error: Invalid operand type for LEA\n");
-                return VM_ERROR_INVALID_INSTRUCTION;
+                return err;
             }
 
-            set_operand_value(vm, instr.operands[0], addr);
+            err = set_operand_value(vm, instr.operands[0], addr);
+            if (err != VM_SUCCESS) {
+                return err;
+            }
+
             vm->cpu.ip++;
             break;
 
         case OP_PUSH:
             if (vm->cpu.sp <= (STACK_START - STACK_SIZE)) {
+                err = VM_ERROR_STACK_OVERFLOW;
                 fprintf(stderr, "Error: Stack overflow at instruction %d\n",
                         vm->cpu.ip);
-                return VM_ERROR_STACK_OVERFLOW;
+                return err;
             }
             vm->memory.data[--vm->cpu.sp] = val1;
             vm->cpu.ip++;
@@ -291,35 +407,44 @@ VMError execute_instruction(VM* vm, Instruction instr) {
 
         case OP_POP:
             if (vm->cpu.sp >= vm->cpu.registers[R_BP]) {
+                err = VM_ERROR_STACK_UNDERFLOW;
                 fprintf(stderr, "Error: Stack underflow at instruction %d\n",
                         vm->cpu.ip);
-                return VM_ERROR_STACK_UNDERFLOW;
+                return err;
             }
 
             if (instr.operands[0].type != OPERAND_REGISTER &&
                 instr.operands[0].type != OPERAND_MEMORY) {
+                err = VM_ERROR_INVALID_OPERAND;
                 fprintf(stderr, "Error: Invalid destination for POP\n");
-                return VM_ERROR_INVALID_INSTRUCTION;
+                return err;
             }
 
-            set_operand_value(vm, instr.operands[0],
+            err = set_operand_value(vm, instr.operands[0],
                               vm->memory.data[vm->cpu.sp++]);
+            if (err != VM_SUCCESS) {
+                fprintf(stderr, "Error: Failed to set operand value\n");
+                return err;
+            }
+
             vm->cpu.ip++;
             break;
 
         case OP_CALL:
             if (vm->cpu.sp <= (STACK_START - STACK_SIZE)) {
+                err = VM_ERROR_STACK_OVERFLOW;
                 fprintf(stderr,
                         "Error: Stack overflow on CALL instruction at %d\n",
                         vm->cpu.ip);
-                return VM_ERROR_STACK_OVERFLOW;
+                return err;
             }
 
             target_addr = find_label_address(vm, instr.operands[0].value.label);
             if (target_addr < 0 || target_addr >= vm->program_size) {
+                err = VM_ERROR_INVALID_INSTRUCTION;
                 fprintf(stderr, "Error: Invalid CALL target address %d\n",
                         target_addr);
-                return VM_ERROR_INVALID_INSTRUCTION;
+                return err;
             }
 
             vm->memory.data[--vm->cpu.sp] = vm->cpu.ip + 1;
@@ -328,27 +453,90 @@ VMError execute_instruction(VM* vm, Instruction instr) {
 
         case OP_RET:
             if (vm->cpu.sp >= vm->cpu.registers[R_BP]) {
+                err = VM_ERROR_STACK_UNDERFLOW;
                 fprintf(stderr,
                         "Error: Stack underflow on RET instruction at %d\n",
                         vm->cpu.ip);
-                return VM_ERROR_STACK_UNDERFLOW;
+                return err;
             }
 
             return_addr = vm->memory.data[vm->cpu.sp++];
             if (return_addr < 0 || return_addr >= vm->program_size) {
+                err = VM_ERROR_INVALID_INSTRUCTION;
                 fprintf(stderr, "Error: Invalid return address %d\n",
                         return_addr);
-                return VM_ERROR_INVALID_INSTRUCTION;
+                return err;
             }
 
             vm->cpu.ip = return_addr;
             break;
 
+        case OP_NOP:
+            vm->cpu.ip++;
+            break;
+
+        case OP_OUT:
+            if (instr.operands[0].type != OPERAND_REGISTER &&
+                instr.operands[0].type != OPERAND_MEMORY) {
+                err = VM_ERROR_INVALID_OPERAND;
+                fprintf(stderr, "Error: Invalid operand type for OUT\n");
+                return err;
+            }
+
+            value = get_operand_value(vm, instr.operands[0]);
+            int format_or_length = 0;
+            if (instr.num_operands > 1) {
+                if (instr.operands[1].type == OPERAND_IMMEDIATE) {
+                    format_or_length = get_operand_value(vm, instr.operands[1]);
+                } else if (instr.operands[1].type == OPERAND_REGISTER) {
+                    format_or_length =
+                        vm->cpu.registers[instr.operands[1].value.reg];
+                } else {
+                    err = VM_ERROR_INVALID_OPERAND;
+                    fprintf(stderr, "Error: Invalid operand type for OUT\n");
+                    return err;
+                }
+            }
+
+            if (instr.operands[0].type == OPERAND_REGISTER) {
+                if (instr.num_operands >= 1) {
+                    vm_print_string(
+                        vm, vm->cpu.registers[instr.operands[0].value.reg],
+                        format_or_length);
+                }
+            } else if (instr.operands[0].type == OPERAND_MEMORY) {
+                if (instr.num_operands >= 1) {
+                    vm_print_string(
+                        vm, vm->memory.data[instr.operands[0].value.mem],
+                        format_or_length);
+                }
+            } else {
+                err = VM_ERROR_INVALID_OPERAND;
+                fprintf(stderr, "Error: Invalid operand type for OUT\n");
+                return err;
+            }
+
+            vm->cpu.ip++;
+            break;
+
+        case OP_PREG:
+            if (instr.operands[0].type != OPERAND_REGISTER) {
+                err = VM_ERROR_INVALID_OPERAND;
+                fprintf(stderr, "Error: Invalid operand type for PREG\n");
+                return err;
+            }
+            uint32_t format = (instr.num_operands > 1)
+                                  ? get_operand_value(vm, instr.operands[1])
+                                  : 0;
+            vm_print_reg_value(vm, format, instr.operands[0].value.reg);
+            vm->cpu.ip++;
+            break;
         default:
+            err = VM_ERROR_INVALID_INSTRUCTION;
             fprintf(stderr, "Error: Unknown opcode %d\n", instr.opcode);
-            return VM_ERROR_INVALID_INSTRUCTION;
+            return err;
     }
-    return VM_SUCCESS;
+    return err;
 }
 
 int get_operand_value(VM* vm, Operand operand) {
@@ -358,7 +546,27 @@ int get_operand_value(VM* vm, Operand operand) {
         case OPERAND_IMMEDIATE:
             return operand.value.imm;
         case OPERAND_MEMORY:
-            return vm->memory.data[operand.value.mem];
+            int effective_address = 0;
+            if (operand.value.mem_ref.base_reg != R_NONE) {
+                effective_address +=
+                    vm->cpu.registers[operand.value.mem_ref.base_reg];
+            }
+
+            if (operand.value.mem_ref.index_reg != R_NONE) {
+                effective_address +=
+                    vm->cpu.registers[operand.value.mem_ref.index_reg] *
+                    operand.value.mem_ref.scale;
+            }
+
+            effective_address += operand.value.mem_ref.offset;
+
+            if (effective_address < 0 || effective_address >= MEMORY_SIZE) {
+                fprintf(stderr, "Error: Invalid memory address %d\n",
+                        effective_address);
+                return 0;
+            }
+
+            return vm->memory.data[effective_address];
         case OPERAND_LABEL:
             return vm->label_addresses[operand.value.label];
         default:
@@ -456,4 +664,9 @@ VMError update_flags(VM* vm, int result, int operand1, int operand2,
     }
 
     return VM_SUCCESS;
+}
+
+bool has_signed_overflow(int a, int b, int result) {
+    return ((a >= 0 && b < 0 && result < 0) ||
+            (a < 0 && b >= 0 && result >= 0));
 }
