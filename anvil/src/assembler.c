@@ -1,7 +1,5 @@
 #include "assembler.h"
 
-#include <sys/types.h>  // TODO: Avoid platform-specific includes
-
 Program* program_create() {
     Program* program = malloc(sizeof(Program));
     if (!program) {
@@ -161,7 +159,7 @@ bool program_finalize(Program* program) {
 Program* assemble_from_string(const char* source) {
     Program* program = program_create();
     if (!program) {
-        fprintf(stderr, "Failed to create program\n");
+        fprintf(stderr, "[ANVIL] Error: Failed to create program!\n");
         return NULL;
     }
 

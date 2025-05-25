@@ -2,8 +2,9 @@
 
 VMError vm_init(VM* vm, Instruction* program, int program_size,
                 int* label_addresses, int num_labels) {
+    VMError err = VM_SUCCESS;
     if (!vm || !program || program_size <= 0) {
-        return VM_ERROR_INITIALIZATION;
+        err = VM_ERROR_INITIALIZATION;
     }
 
     for (int i = 0; i < R_COUNT; i++) {
@@ -17,7 +18,7 @@ VMError vm_init(VM* vm, Instruction* program, int program_size,
     vm->cpu.registers[R_SP] = vm->cpu.sp;
     vm->cpu.registers[R_BP] = vm->cpu.sp;
 
-    VMError err = init_memory(&vm->memory);
+    err = init_memory(&vm->memory);
     if (err != VM_SUCCESS) {
         return err;
     }
@@ -27,14 +28,14 @@ VMError vm_init(VM* vm, Instruction* program, int program_size,
     vm->label_addresses = label_addresses;
     vm->num_labels = num_labels;
 
-    return VM_SUCCESS;
+    return err;
 }
 
 VM* vm_create(Instruction* program, int program_size, int* label_addresses,
               int num_labels) {
     VM* vm = (VM*)malloc(sizeof(VM));
     if (!vm) {
-        fprintf(stderr, "Error: Memory allocation failed for VM.\n");
+        fprintf(stderr, "[ANVIL] Error: Memory allocation failed for VM!\n");
         return NULL;
     }
     VMError err =
@@ -55,32 +56,37 @@ void vm_destroy(VM* vm) {
 }
 
 VMError vm_run(VM* vm) {
+    VMError err = VM_SUCCESS;
     if (!vm || !vm->program) {
-        return VM_ERROR_INVALID_ARGUMENT;
+        err = VM_ERROR_INVALID_ARGUMENT;
     }
 
     while (vm->cpu.ip >= 0 && vm->cpu.ip < vm->program_size) {
         Instruction instr = vm->program[vm->cpu.ip];
-        VMError err = execute_instruction(vm, instr);
+        err = execute_instruction(vm, instr);
         if (err != VM_SUCCESS) {
             return err;
         }
     }
 
-    return VM_SUCCESS;
+    return err;
 }
 
 VMError vm_step(VM* vm) {
+    VMError err = VM_SUCCESS;
     if (!vm || !vm->program) {
-        return VM_ERROR_INVALID_ARGUMENT;
+        err = VM_ERROR_INVALID_ARGUMENT;
+        return err;
     }
 
     if (vm->cpu.ip < 0 || vm->cpu.ip >= vm->program_size) {
-        return VM_ERROR_PROGRAM_COUNTER_OUT_OF_BOUNDS;
+        err = VM_ERROR_PROGRAM_COUNTER_OUT_OF_BOUNDS;
+        return err;
     }
 
     Instruction instr = vm->program[vm->cpu.ip];
-    return execute_instruction(vm, instr);
+    err = execute_instruction(vm, instr);
+    return err;
 }
 
 void vm_print_state(VM* vm) {
