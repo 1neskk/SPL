@@ -5,7 +5,7 @@
 
 void test_arithmetic() {
     printf("\n==========================\n");
-    printf("Testing arithmetic operations...\n");
+    printf("[ANVIL] Testing arithmetic operations...\n");
     
     // Create a simple program to test arithmetic
     /*
@@ -31,11 +31,11 @@ void test_arithmetic() {
     
     VM* vm = vm_create(program, 8, NULL, 0);
     assert(vm != NULL);
-    printf("VM created successfully.\n");
+    printf("[ANVIL] VM created successfully.\n");
     
     VMError err = vm_run(vm);
     assert(err == VM_SUCCESS);
-    printf("Program executed successfully.\n");
+    printf("[ANVIL] Program executed successfully.\n");
     
     // AX should be 15 after ADD, then 8 after SUB, then 40 after MUL, then 20 after DIV
     assert(vm->cpu.registers[R_AX] == 20);
@@ -44,12 +44,12 @@ void test_arithmetic() {
     vm_print_state(vm);
     
     vm_destroy(vm);
-    printf("Arithmetic test passed!\n");
+    printf("[ANVIL] Arithmetic test passed!\n");
 }
 
 void test_parser() {
-    printf("\n\n==========================\n");
-    printf("Testing parser...\n");
+    printf("\n==========================\n");
+    printf("[ANVIL] Testing parser...\n");
 
     const char* source = 
         "start:\n"
@@ -63,11 +63,11 @@ void test_parser() {
 
     VM* vm = vm_create(program->instructions, program->size, program->label_addresses, program->label_size);
     assert(vm != NULL);
-    printf("VM created successfully.\n");
+    printf("[ANVIL] VM created successfully.\n");
 
     VMError err = vm_run(vm);
     assert(err == VM_SUCCESS);
-    printf("Program executed successfully.\n");
+    printf("[ANVIL] Program executed successfully.\n");
 
     assert(vm->cpu.registers[R_AX] == 15);
     assert(vm->cpu.registers[R_BX] == 5);
@@ -76,12 +76,12 @@ void test_parser() {
     vm_destroy(vm);
     program_destroy(program);
 
-    printf("Parser test passed!\n");
+    printf("[ANVIL] Parser test passed!\n");
 }
 
 void test_reg_out() {
-    printf("\n\n==========================\n");
-    printf("Testing IO...\n");
+    printf("\n==========================\n");
+    printf("[ANVIL] Testing PREG instruction...\n");
 
     const char* source = 
         "start:\n"
@@ -95,53 +95,53 @@ void test_reg_out() {
 
     Program* program = assemble_from_string(source);
     assert(program != NULL);
-    printf("Program assembled successfully.\n");
+    printf("[ANVIL] Program assembled successfully.\n");
 
     VM* vm = vm_create(program->instructions, program->size, program->label_addresses, program->label_size);
     assert(vm != NULL);
-    printf("VM created successfully.\n");
+    printf("[ANVIL] VM created successfully.\n");
 
-    printf("Program output:\n\n");
+    printf("[ANVIL] Program output:\n\n");
 
     VMError err = vm_run(vm);
     assert(err == VM_SUCCESS);
-    printf("\nProgram executed successfully.\n");
+    printf("\n[ANVIL] Program executed successfully.\n");
 
     vm_destroy(vm);
     program_destroy(program);
-    printf("IO test passed!\n");
+    printf("[ANVIL] IO test passed!\n");
 }
 
 void test_file_parsing() {
-    printf("\n\n==========================\n");
-    printf("Testing file parsing...\n");
+    printf("\n==========================\n");
+    printf("[ANVIL] Testing file parsing...\n");
 
     Program* program = assemble_from_file("io_test.asm");
     assert(program != NULL);
-    printf("Program assembled successfully.\n");
+    printf("[ANVIL] Program assembled successfully.\n");
 
     VM* vm = vm_create(program->instructions, program->size, program->label_addresses, program->label_size);
     assert(vm != NULL);
-    printf("VM created successfully.\n");
+    printf("[ANVIL] VM created successfully.\n");
 
-    printf("Program output:\n");
+    printf("[ANVIL] Program output:\n\n");
 
     VMError err = vm_run(vm);
     assert(err == VM_SUCCESS);
-    printf("\nProgram executed successfully.\n");
+    printf("\n[ANVIL] Program executed successfully.\n");
     vm_print_state(vm);
 
-    printf("\nMemory dump:\n");
+    printf("\n[ANVIL] Memory dump:\n");
     vm_dump_memory(vm, 0x1000, 0x1010);
 
     vm_destroy(vm);
     program_destroy(program);
-    printf("\nFile parsing test passed!\n");
+    printf("\n[ANVIL] File parsing test passed!\n");
 }
 
 void test_io_ports() {
-    printf("\n\n==========================\n");
-    printf("Testing IO ports...\n");
+    printf("\n==========================\n");
+    printf("[ANVIL] Testing IO ports...\n");
 
     const char* source = 
         "start:\n"
@@ -151,29 +151,30 @@ void test_io_ports() {
 
     Program* program = assemble_from_string(source);
     assert(program != NULL);
-    printf("Program assembled successfully.\n");
+    printf("[ANVIL] Program assembled successfully.\n");
 
     VM* vm = vm_create(program->instructions, program->size, program->label_addresses, program->label_size);
     assert(vm != NULL);
-    printf("VM created successfully.\n");
+    printf("[ANVIL] VM created successfully.\n");
 
-    printf("Program output:\n\n");
+    printf("[ANVIL] Program output:\n\n");
 
     VMError err = vm_run(vm);
     assert(err == VM_SUCCESS);
-    printf("\nProgram executed successfully.\n");
+    printf("\n[ANVIL] Program executed successfully.\n");
 
     vm_destroy(vm);
     program_destroy(program);
-    printf("IO ports test passed!\n");
+    printf("[ANVIL] IO ports test passed!\n");
 }
 
 int main() {
+    printf("[ANVIL] Starting tests...\n");
     test_arithmetic();
     test_parser();
     test_reg_out();
     test_file_parsing();
     test_io_ports();
-    printf("All tests passed!\n");
+    printf("[ANVIL] All tests passed!\n");
     return 0;
 }
