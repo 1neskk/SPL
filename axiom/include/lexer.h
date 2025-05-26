@@ -1,9 +1,11 @@
 #ifndef LEXER_H_
 #define LEXER_H_
 
+#include <stdbool.h>
 #include <string.h>
+#include <stdlib.h>
 
-enum token_type {
+typedef enum{
     // keywords
     TOKEN_IF,     // if
     TOKEN_ELSE,   // else
@@ -40,24 +42,22 @@ enum token_type {
     TOKEN_NUMBER,      // number
 
     TOKEN_EOF,
-};
+} TokenType;
 
-struct token {
-    enum token_type type;
+typedef struct {
+    TokenType type;
     char* value;
     int line;
     int column;
-};
-typedef struct token Token;
+} Token;
 
-struct lexer {
+typedef struct {
     char* source;
     int position;
     int line;
     int column;
     char current_char;
-};
-typedef struct lexer Lexer;
+} Lexer;
 
 Lexer* init_lexer(char* source);
 void advance(Lexer* lexer);
