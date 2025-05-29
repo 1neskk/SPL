@@ -11,7 +11,8 @@ int handle_error(VMError err) {
             fprintf(stderr, "[ANVIL] Error: Invalid argument provided!\n");
             break;
         case VM_ERROR_INVALID_INSTRUCTION:
-            fprintf(stderr, "[ANVIL] Error: Invalid instruction encountered!\n");
+            fprintf(stderr,
+                    "[ANVIL] Error: Invalid instruction encountered!\n");
             break;
         case VM_ERROR_INVALID_OPERAND:
             fprintf(stderr, "[ANVIL] Error: Invalid operand encountered!\n");

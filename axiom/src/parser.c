@@ -10,6 +10,4 @@ bool is_end_of_line(Parser* parser) {
            parser->str[parser->pos] == '\n' || parser->str[parser->pos] == ';';
 }
 
-bool parse_keyword(Parser* parser, TokenType expected) {
-
-}
+bool parse_keyword(Parser* parser, TokenType expected) {}
