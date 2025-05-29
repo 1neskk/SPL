@@ -12,4 +12,4 @@ void parser_init(Parser* parser, const char* str);
 bool is_end_of_line(Parser* parser);
 bool parse_keyword(Parser* parser, TokenType expected);
 
-#endif // PARSER_H_
+#endif  // PARSER_H_

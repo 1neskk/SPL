@@ -47,14 +47,16 @@ VMError execute_instruction(VM* vm, Instruction instr) {
                 err = write_memory(&vm->memory, effective_address, value);
                 if (err != VM_SUCCESS) {
                     fprintf(stderr,
-                            "[ANVIL] Error: Failed to write to memory at 0x%x. Error "
+                            "[ANVIL] Error: Failed to write to memory at 0x%x. "
+                            "Error "
                             "code: %d\n",
                             effective_address, err);
                     return err;
                 }
             } else {
                 err = VM_ERROR_INVALID_OPERAND;
-                fprintf(stderr, "[ANVIL] Error: Invalid destination for MOV!\n");
+                fprintf(stderr,
+                        "[ANVIL] Error: Invalid destination for MOV!\n");
                 return err;
             }
             vm->cpu.ip++;
@@ -382,7 +384,8 @@ VMError execute_instruction(VM* vm, Instruction instr) {
                 addr = vm->cpu.registers[instr.operands[1].value.reg];
             else {
                 err = VM_ERROR_INVALID_OPERAND;
-                fprintf(stderr, "[ANVIL] Error: Invalid operand type for LEA!\n");
+                fprintf(stderr,
+                        "[ANVIL] Error: Invalid operand type for LEA!\n");
                 return err;
             }
 
@@ -397,7 +400,8 @@ VMError execute_instruction(VM* vm, Instruction instr) {
         case OP_PUSH:
             if (vm->cpu.sp <= (STACK_START - STACK_SIZE)) {
                 err = VM_ERROR_STACK_OVERFLOW;
-                fprintf(stderr, "[ANVIL] Error: Stack overflow at instruction %d\n",
+                fprintf(stderr,
+                        "[ANVIL] Error: Stack overflow at instruction %d\n",
                         vm->cpu.ip);
                 return err;
             }
@@ -408,7 +412,8 @@ VMError execute_instruction(VM* vm, Instruction instr) {
         case OP_POP:
             if (vm->cpu.sp >= vm->cpu.registers[R_BP]) {
                 err = VM_ERROR_STACK_UNDERFLOW;
-                fprintf(stderr, "[ANVIL] Error: Stack underflow at instruction %d\n",
+                fprintf(stderr,
+                        "[ANVIL] Error: Stack underflow at instruction %d\n",
                         vm->cpu.ip);
                 return err;
             }
@@ -416,14 +421,16 @@ VMError execute_instruction(VM* vm, Instruction instr) {
             if (instr.operands[0].type != OPERAND_REGISTER &&
                 instr.operands[0].type != OPERAND_MEMORY) {
                 err = VM_ERROR_INVALID_OPERAND;
-                fprintf(stderr, "[ANVIL] Error: Invalid destination for POP!\n");
+                fprintf(stderr,
+                        "[ANVIL] Error: Invalid destination for POP!\n");
                 return err;
             }
 
             err = set_operand_value(vm, instr.operands[0],
                                     vm->memory.data[vm->cpu.sp++]);
             if (err != VM_SUCCESS) {
-                fprintf(stderr, "[ANVIL] Error: Failed to set operand value!\n");
+                fprintf(stderr,
+                        "[ANVIL] Error: Failed to set operand value!\n");
                 return err;
             }
 
@@ -433,16 +440,18 @@ VMError execute_instruction(VM* vm, Instruction instr) {
         case OP_CALL:
             if (vm->cpu.sp <= (STACK_START - STACK_SIZE)) {
                 err = VM_ERROR_STACK_OVERFLOW;
-                fprintf(stderr,
-                        "[ANVIL] Error: Stack overflow on CALL instruction at %d\n",
-                        vm->cpu.ip);
+                fprintf(
+                    stderr,
+                    "[ANVIL] Error: Stack overflow on CALL instruction at %d\n",
+                    vm->cpu.ip);
                 return err;
             }
 
             target_addr = find_label_address(vm, instr.operands[0].value.label);
             if (target_addr < 0 || target_addr >= vm->program_size) {
                 err = VM_ERROR_INVALID_INSTRUCTION;
-                fprintf(stderr, "[ANVIL] Error: Invalid CALL target address %d\n",
+                fprintf(stderr,
+                        "[ANVIL] Error: Invalid CALL target address %d\n",
                         target_addr);
                 return err;
             }
@@ -454,9 +463,10 @@ VMError execute_instruction(VM* vm, Instruction instr) {
         case OP_RET:
             if (vm->cpu.sp >= vm->cpu.registers[R_BP]) {
                 err = VM_ERROR_STACK_UNDERFLOW;
-                fprintf(stderr,
-                        "[ANVIL] Error: Stack underflow on RET instruction at %d\n",
-                        vm->cpu.ip);
+                fprintf(
+                    stderr,
+                    "[ANVIL] Error: Stack underflow on RET instruction at %d\n",
+                    vm->cpu.ip);
                 return err;
             }
 
@@ -479,7 +489,8 @@ VMError execute_instruction(VM* vm, Instruction instr) {
             if (instr.operands[0].type != OPERAND_REGISTER &&
                 instr.operands[0].type != OPERAND_MEMORY) {
                 err = VM_ERROR_INVALID_OPERAND;
-                fprintf(stderr, "[ANVIL] Error: Invalid operand type for OUT!\n");
+                fprintf(stderr,
+                        "[ANVIL] Error: Invalid operand type for OUT!\n");
                 return err;
             }
 
@@ -493,7 +504,8 @@ VMError execute_instruction(VM* vm, Instruction instr) {
                         vm->cpu.registers[instr.operands[1].value.reg];
                 } else {
                     err = VM_ERROR_INVALID_OPERAND;
-                    fprintf(stderr, "[ANVIL] Error: Invalid operand type for OUT!\n");
+                    fprintf(stderr,
+                            "[ANVIL] Error: Invalid operand type for OUT!\n");
                     return err;
                 }
             }
@@ -512,7 +524,8 @@ VMError execute_instruction(VM* vm, Instruction instr) {
                 }
             } else {
                 err = VM_ERROR_INVALID_OPERAND;
-                fprintf(stderr, "[ANVIL] Error: Invalid operand type for OUT!\n");
+                fprintf(stderr,
+                        "[ANVIL] Error: Invalid operand type for OUT!\n");
                 return err;
             }
 
@@ -522,7 +535,8 @@ VMError execute_instruction(VM* vm, Instruction instr) {
         case OP_PREG:
             if (instr.operands[0].type != OPERAND_REGISTER) {
                 err = VM_ERROR_INVALID_OPERAND;
-                fprintf(stderr, "[ANVIL] Error: Invalid operand type for PREG!\n");
+                fprintf(stderr,
+                        "[ANVIL] Error: Invalid operand type for PREG!\n");
                 return err;
             }
             uint32_t format = (instr.num_operands > 1)
@@ -596,7 +610,8 @@ VMError set_operand_value(VM* vm, Operand operand, int value) {
             vm->memory.data[operand.value.mem] = value;
             break;
         default:
-            fprintf(stderr, "[ANVIL] Error: Cannot set value for this operand type!\n");
+            fprintf(stderr,
+                    "[ANVIL] Error: Cannot set value for this operand type!\n");
             err = VM_ERROR_INVALID_OPERAND;
     }
     return err;
@@ -662,7 +677,8 @@ VMError update_flags(VM* vm, int result, int operand1, int operand2,
             break;
 
         default:
-            fprintf(stderr, "[ANVIL] Error: Invalid operation for flag update!\n");
+            fprintf(stderr,
+                    "[ANVIL] Error: Invalid operation for flag update!\n");
             err = VM_ERROR_INVALID_INSTRUCTION;
             break;
     }

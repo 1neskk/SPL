@@ -2,10 +2,10 @@
 #define LEXER_H_
 
 #include <stdbool.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
-typedef enum{
+typedef enum {
     // keywords
     TOKEN_IF,     // if
     TOKEN_ELSE,   // else
