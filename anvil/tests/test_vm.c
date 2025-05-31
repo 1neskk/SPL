@@ -101,7 +101,7 @@ void test_reg_out() {
     assert(vm != NULL);
     printf("[ANVIL] VM created successfully.\n");
 
-    printf("[ANVIL] Program output:\n\n");
+    printf("[ANVIL] Program output:\n");
 
     VMError err = vm_run(vm);
     assert(err == VM_SUCCESS);
@@ -124,7 +124,7 @@ void test_file_parsing() {
     assert(vm != NULL);
     printf("[ANVIL] VM created successfully.\n");
 
-    printf("[ANVIL] Program output:\n\n");
+    printf("[ANVIL] Program output:\n");
 
     VMError err = vm_run(vm);
     assert(err == VM_SUCCESS);
@@ -157,7 +157,7 @@ void test_io_ports() {
     assert(vm != NULL);
     printf("[ANVIL] VM created successfully.\n");
 
-    printf("[ANVIL] Program output:\n\n");
+    printf("[ANVIL] Program output:\n");
 
     VMError err = vm_run(vm);
     assert(err == VM_SUCCESS);
