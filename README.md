@@ -107,10 +107,7 @@ flowchart LR
     class Input,TokenStream,SyntaxTree,AnnotatedAST,Assembly data;
 ```
 ## Building
-To build the project, you need to have **CMake** and a C compiler installed&mdash;preferably **GCC** (GNU C Compiler). Follow these steps:
-
-> [!WARNING]
-> Has not been tested on Windows yet.
+To build the project, you need to have **CMake** and a C compiler installed&mdash;preferably **GCC** (GNU C Compiler) but also supports MSVC. Follow these steps:
 
 1. Clone the repository:
    ```bash
@@ -126,8 +123,7 @@ Linux:
     ```bash
         mkdir build
         cd build
-        cmake ..
-        cmake --build .
+        cmake .. -DCMAKE_BUILD_TYPE=release
     ```
 3. Open the resulting project file in your preferred IDE or run the executable directly from the `build` directory.
 
