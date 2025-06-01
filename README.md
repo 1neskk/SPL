@@ -115,6 +115,7 @@ To build the project, you need to have **CMake** and a C compiler installed&mdas
     cd axiom-lang
    ```
 2. Run the build command
+
 Linux:
    ```bash
    make build
