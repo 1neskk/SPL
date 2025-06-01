@@ -120,7 +120,8 @@ Linux:
    ```bash
    make build
    ```
-    Windows:
+
+Windows:
     ```bash
         mkdir build
         cd build
