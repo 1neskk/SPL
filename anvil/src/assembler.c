@@ -206,8 +206,8 @@ Program* assemble_from_file(const char* filename) {
         return NULL;
     }
 
-    fread(src, 1, size, file);
-    src[size] = '\0';
+    size_t bytes_read = fread(src, 1, size, file);
+    src[bytes_read] = '\0';
     fclose(file);
 
     Program* program = assemble_from_string(src);
