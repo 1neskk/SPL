@@ -2,11 +2,15 @@
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || \
     defined(_M_IX86)
+#ifndef _MSC_VER
 #define USE_ASM
 #endif
+#endif
 
+#ifdef USE_ASM
 void memcopy_(uint32_t* dest, uint32_t* src, uint32_t size);
 void memclear_(uint32_t* data, uint32_t size);
+#endif
 
 VMError init_memory(Memory* memory) {
     VMError err = VM_SUCCESS;

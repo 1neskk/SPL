@@ -2,6 +2,10 @@
 #define PARSER_H_
 
 #include <ctype.h>
+#ifdef _MSC_VER
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
+#endif
 #include <string.h>
 
 #include "vm.h"

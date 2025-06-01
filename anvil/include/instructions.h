@@ -1,6 +1,8 @@
 #ifndef INSTRUCTIONS_H_
 #define INSTRUCTIONS_H_
 
+#include <stdbool.h>
+
 typedef enum {
     OP_HALT,
     OP_MOV,

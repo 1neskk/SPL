@@ -61,6 +61,13 @@ char* parse_token(Parser* parser) {
     strncpy(token, start, length);
     token[length] = '\0';
 
+    // Remove trailing carriage return if present
+    // This is useful for handling Windows-style line endings
+    size_t token_length = strlen(token);
+    if (token_length > 0 && token[token_length - 1] == '\r') {
+        token[token_length - 1] = '\0';
+    }
+
     return token;
 }
 
