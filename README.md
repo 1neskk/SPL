@@ -111,8 +111,8 @@ To build the project, you need to have **CMake** and a C compiler installed&mdas
 
 1. Clone the repository:
    ```bash
-    git clone https://github.com/1neskk/axiom-lang.git
-    cd axiom-lang
+   git clone https://github.com/1neskk/axiom-lang.git
+   cd axiom-lang
    ```
 2. Run the build command
 
