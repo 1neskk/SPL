@@ -117,16 +117,16 @@ To build the project, you need to have **CMake** and a C compiler installed&mdas
 2. Run the build command
 
 Linux:
-   ```bash
+```bash
    make build
-   ```
+```
 
 Windows:
-    ```bash
+```bash
         mkdir build
         cd build
         cmake .. -DCMAKE_BUILD_TYPE=release
-    ```
+```
 3. Open the resulting project file in your preferred IDE or run the executable directly from the `build` directory.
 
 ## License
