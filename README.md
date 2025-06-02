@@ -110,23 +110,23 @@ flowchart LR
 To build the project, you need to have **CMake** and a C compiler installed&mdash;preferably **GCC** (GNU C Compiler) but also supports MSVC. Follow these steps:
 
 1. Clone the repository:
-   ```bash
-   git clone https://github.com/1neskk/axiom-lang.git
-   cd axiom-lang
-   ```
+    ```bash
+    git clone https://github.com/1neskk/axiom-lang.git
+    cd axiom-lang
+    ```
 2. Run the build command
 
-Linux:
-```bash
-make build
-```
-
-Windows:
-```bash
-mkdir build
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=release
-```
+    Linux:
+    ```bash
+    make build
+    ```
+    
+    Windows:
+    ```bash
+    mkdir build
+    cd build
+    cmake .. -DCMAKE_BUILD_TYPE=release
+    ```
 3. Open the resulting project file in your preferred IDE or run the executable directly from the `build` directory.
 
 ## License
