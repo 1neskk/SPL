@@ -44,18 +44,23 @@ void skip_whitespace(Lexer* lexer) {
 }
 
 void skip_comment(Lexer* lexer) {
-    while (lexer->current_char != '\0' && lexer->current_char != '\n')
-        advance(lexer);
+    if (lexer->current_char == '#') {
+        while (lexer->current_char != '\0' && lexer->current_char != '\n')
+            advance(lexer);
+        if (lexer->current_char == '\n') {
+            advance(lexer);
+        }
+    }
 }
 
 Token* number(Lexer* lexer) {
-    char* buffer = (char*)malloc(32);
+    char* buffer = (char*)malloc(32 * sizeof(char));
     int index = 0;
     while (lexer->current_char != '\0' && isdigit(lexer->current_char)) {
         buffer[index++] = lexer->current_char;
         advance(lexer);
     }
-    buffer[index] = '\0';  // example: 123 => "123\0"
+    buffer[index] = '\0';
 
     Token* token = (Token*)malloc(sizeof(Token));
     if (!token) {
@@ -65,6 +70,31 @@ Token* number(Lexer* lexer) {
     }
 
     token->type = TOKEN_NUMBER;
+    token->value = buffer;
+    token->line = lexer->line;
+    token->column = lexer->column - index;
+
+    return token;
+}
+
+Token* identifier(Lexer* lexer) {
+    char* buffer = (char*)malloc(32 * sizeof(char));
+    int index = 0;
+    while (lexer->current_char != '\0' &&
+           (isalnum(lexer->current_char) || lexer->current_char == '_')) {
+        buffer[index++] = lexer->current_char;
+        advance(lexer);
+    }
+    buffer[index] = '\0';
+
+    Token* token = (Token*)malloc(sizeof(Token));
+    if (!token) {
+        fprintf(stderr, "Memory allocation failed\n");
+        free(buffer);
+        return NULL;
+    }
+
+    token->type = TOKEN_IDENTIFIER;
     token->value = buffer;
     token->line = lexer->line;
     token->column = lexer->column - index;
