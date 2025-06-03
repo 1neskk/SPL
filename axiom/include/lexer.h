@@ -67,5 +67,6 @@ void skip_whitespace(Lexer* lexer);
 void skip_comment(Lexer* lexer);
 
 Token* number(Lexer* lexer);
+Token* identifier(Lexer* lexer);
 
 #endif  // LEXER_H_
